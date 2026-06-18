@@ -27,6 +27,13 @@ export class Collectibles {
     }
   }
 
+  /** Repositions every orb to a new random location (used on round restart). */
+  reset(): void {
+    for (const orb of this.orbs) {
+      this.randomize(orb);
+    }
+  }
+
   private randomize(orb: THREE.Mesh): void {
     orb.position.set(
       THREE.MathUtils.randFloatSpread(ARENA_HALF * 2),
