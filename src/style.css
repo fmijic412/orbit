@@ -42,7 +42,70 @@ body {
   letter-spacing: 0.5px;
 }
 
+#time {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
 #hint {
   font-size: 13px;
   opacity: 0.6;
+}
+
+#end-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 6, 10, 0.78);
+  z-index: 20;
+}
+
+#end-screen.hidden {
+  display: none;
+}
+
+#end-panel {
+  text-align: center;
+  padding: 36px 48px;
+  border-radius: 14px;
+  background: #11162a;
+  border: 1px solid #2a3550;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color: #e8ecf5;
+}
+
+#end-panel h1 {
+  font-size: 30px;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+#final-score {
+  font-size: 20px;
+  opacity: 0.85;
+  margin-bottom: 24px;
+}
+
+#play-again {
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: #05060a;
+  background: #ffcf5c;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 28px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+#play-again:hover {
+  background: #ffd97a;
+}
+
+#play-again:active {
+  transform: scale(0.97);
 }

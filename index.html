@@ -9,9 +9,17 @@
   <body>
     <div id="hud">
       <span id="score">Score: 0</span>
+      <span id="time">Time: 60</span>
       <span id="hint">WASD / Arrows to move &middot; collect the glowing orbs</span>
     </div>
     <canvas id="game"></canvas>
+    <div id="end-screen" class="hidden">
+      <div id="end-panel">
+        <h1>Time's up!</h1>
+        <p id="final-score">Final score: 0</p>
+        <button id="play-again" type="button">Play again</button>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

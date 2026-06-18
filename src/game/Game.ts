@@ -3,6 +3,11 @@ import { Input } from "./input";
 import { Player } from "./Player";
 import { Collectibles } from "./Collectibles";
 
+/** Length of a single round, in seconds. */
+const ROUND_SECONDS = 60;
+
+type GameState = "playing" | "ended";
+
 /**
  * Top-level game controller: owns the renderer, scene, camera and the
  * fixed-timestep-ish animation loop. New gameplay systems should be
@@ -19,7 +24,14 @@ export class Game {
   private readonly collectibles = new Collectibles(6);
 
   private score = 0;
+  private timeLeft = ROUND_SECONDS;
+  private state: GameState = "playing";
+
   private readonly scoreEl = document.getElementById("score");
+  private readonly timeEl = document.getElementById("time");
+  private readonly endScreenEl = document.getElementById("end-screen");
+  private readonly finalScoreEl = document.getElementById("final-score");
+  private readonly playAgainEl = document.getElementById("play-again");
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -36,6 +48,9 @@ export class Game {
     this.buildWorld();
     this.scene.add(this.player.mesh);
     this.scene.add(this.collectibles.group);
+
+    this.playAgainEl?.addEventListener("click", this.restart);
+    this.updateHud();
 
     this.onResize();
     window.addEventListener("resize", this.onResize);
@@ -82,14 +97,52 @@ export class Game {
   }
 
   private update(dt: number): void {
+    if (this.state !== "playing") {
+      // Frozen: keep rendering but ignore input, scoring and the clock.
+      this.updateCamera();
+      return;
+    }
+
+    this.timeLeft = Math.max(0, this.timeLeft - dt);
+
     this.player.update(dt, this.input);
     const got = this.collectibles.update(dt, this.player.position);
     if (got > 0) {
       this.score += got;
-      if (this.scoreEl) this.scoreEl.textContent = `Score: ${this.score}`;
     }
+    this.updateHud();
     this.updateCamera();
+
+    if (this.timeLeft <= 0) {
+      this.endRound();
+    }
   }
+
+  private updateHud(): void {
+    if (this.scoreEl) this.scoreEl.textContent = `Score: ${this.score}`;
+    if (this.timeEl) {
+      this.timeEl.textContent = `Time: ${Math.ceil(this.timeLeft)}`;
+    }
+  }
+
+  private endRound(): void {
+    this.state = "ended";
+    if (this.finalScoreEl) {
+      this.finalScoreEl.textContent = `Final score: ${this.score}`;
+    }
+    this.endScreenEl?.classList.remove("hidden");
+  }
+
+  /** Resets score, timer and orbs and starts a fresh round. */
+  private restart = (): void => {
+    this.score = 0;
+    this.timeLeft = ROUND_SECONDS;
+    this.player.reset();
+    this.collectibles.reset();
+    this.endScreenEl?.classList.add("hidden");
+    this.updateHud();
+    this.state = "playing";
+  };
 
   private loop = (): void => {
     const dt = Math.min(this.clock.getDelta(), 0.05);

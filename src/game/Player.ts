@@ -27,6 +27,11 @@ export class Player {
     return this.mesh.position;
   }
 
+  /** Returns the player to the arena centre (used on round restart). */
+  reset(): void {
+    this.mesh.position.set(0, 0.5, 0);
+  }
+
   update(dt: number, input: Input): void {
     const dir = new THREE.Vector3(input.moveX, 0, -input.moveZ);
     if (dir.lengthSq() > 0) {

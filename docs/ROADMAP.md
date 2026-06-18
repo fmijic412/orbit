@@ -1,13 +1,16 @@
 # Roadmap / Feature Backlog
 
-The daily task picks the **topmost unchecked** item it can implement cleanly,
-or invents a sensible new one if the list runs low. Keep each feature small
-enough to ship in a single PR. Check items off as they ship and add new ideas
-at the bottom.
+> **Sprint 1 is scheduled.** See `docs/PLAN.md` for the dated plan and
+> `docs/issues/` for the pre-written issues. The daily task implements the
+> issue whose target date is today. This file is the longer-term idea backlog;
+> items marked `[x]` have shipped.
+
+Keep each feature small enough to ship in a single PR. Add new ideas at the
+bottom; they get scheduled into a future sprint.
 
 ## Gameplay
 
-- [ ] Countdown timer + end-of-round score screen with restart
+- [x] Countdown timer + end-of-round score screen with restart
 - [ ] Combo multiplier for collecting orbs in quick succession
 - [ ] Moving "hazard" cubes that cost points on contact
 - [ ] Power-ups (speed boost, magnet that pulls nearby orbs)
