@@ -29,7 +29,7 @@ bottom; they get scheduled into a future sprint.
 
 - [ ] Main menu with Start button
 - [ ] Pause (Esc) overlay
-- [ ] High-score persistence (in-memory, reset on reload)
+- [x] High-score persistence (in-memory, reset on reload)
 - [ ] Mobile touch / on-screen joystick controls
 
 ## Tech
