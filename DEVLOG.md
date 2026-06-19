@@ -2,6 +2,16 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-06-19 — High-score persistence (session) (#002)
+
+- Added a `bestScore` field to `Game.ts` (in-memory; persists across "Play
+  again" but resets on full page reload, per the issue).
+- New `#best` HUD element ("Best: N") in `index.html`, styled in
+  `src/style.css`; `updateHud()` now keeps it in sync.
+- `endRound()` detects a new best (`score > bestScore`), updates `bestScore`,
+  and toggles a highlighted "New best!" line (`#new-best`) on the end overlay.
+- Bumped version to v0.1.2.
+
 ## 2026-06-18 — Round timer + end-of-round score screen (#001)
 
 - Added a 60-second round timer tracked in `Game.ts` (`timeLeft`, decremented

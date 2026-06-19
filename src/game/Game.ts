@@ -24,13 +24,16 @@ export class Game {
   private readonly collectibles = new Collectibles(6);
 
   private score = 0;
+  private bestScore = 0;
   private timeLeft = ROUND_SECONDS;
   private state: GameState = "playing";
 
   private readonly scoreEl = document.getElementById("score");
+  private readonly bestEl = document.getElementById("best");
   private readonly timeEl = document.getElementById("time");
   private readonly endScreenEl = document.getElementById("end-screen");
   private readonly finalScoreEl = document.getElementById("final-score");
+  private readonly newBestEl = document.getElementById("new-best");
   private readonly playAgainEl = document.getElementById("play-again");
 
   constructor(canvas: HTMLCanvasElement) {
@@ -120,6 +123,7 @@ export class Game {
 
   private updateHud(): void {
     if (this.scoreEl) this.scoreEl.textContent = `Score: ${this.score}`;
+    if (this.bestEl) this.bestEl.textContent = `Best: ${this.bestScore}`;
     if (this.timeEl) {
       this.timeEl.textContent = `Time: ${Math.ceil(this.timeLeft)}`;
     }
@@ -127,10 +131,18 @@ export class Game {
 
   private endRound(): void {
     this.state = "ended";
+
+    const isNewBest = this.score > this.bestScore;
+    if (isNewBest) {
+      this.bestScore = this.score;
+    }
+
     if (this.finalScoreEl) {
       this.finalScoreEl.textContent = `Final score: ${this.score}`;
     }
+    this.newBestEl?.classList.toggle("hidden", !isNewBest);
     this.endScreenEl?.classList.remove("hidden");
+    this.updateHud();
   }
 
   /** Resets score, timer and orbs and starts a fresh round. */

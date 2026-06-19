@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-06-19
 - **Labels:** ui, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-06-19)
 
 ## Motivation
 
@@ -11,9 +11,9 @@ session.
 
 ## Acceptance criteria
 
-- [ ] The best score so far is tracked and shown in the HUD ("Best: N").
-- [ ] When a round ends with a new best, the end screen highlights it.
-- [ ] Best score persists across "Play again" within the same page session.
+- [x] The best score so far is tracked and shown in the HUD ("Best: N").
+- [x] When a round ends with a new best, the end screen highlights it.
+- [x] Best score persists across "Play again" within the same page session.
 
 ## Technical notes
 
