@@ -11,7 +11,7 @@ bottom; they get scheduled into a future sprint.
 ## Gameplay
 
 - [x] Countdown timer + end-of-round score screen with restart
-- [ ] Combo multiplier for collecting orbs in quick succession
+- [x] Combo multiplier for collecting orbs in quick succession
 - [ ] Moving "hazard" cubes that cost points on contact
 - [ ] Power-ups (speed boost, magnet that pulls nearby orbs)
 - [ ] Multiple orb types worth different points
