@@ -2,6 +2,21 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-06-20 — Combo multiplier for quick collections (#003)
+
+- Added a combo system to `Game.ts`: new `multiplier` and `comboTimer` fields,
+  with constants `BASE_POINTS`, `COMBO_WINDOW` (2s) and `MAX_MULTIPLIER` (9).
+- All scoring now routes through a single `addScore(orbs)` helper — picking up
+  an orb while the window is still open bumps the multiplier (x2, x3, …) and
+  refills the timer; otherwise the combo starts fresh at x1. Points per orb =
+  `BASE_POINTS * multiplier`.
+- `decayCombo(dt)` counts the window down each frame and resets the multiplier
+  to x1 when it lapses; `restart()` clears the combo state.
+- New HUD combo readout (`#combo`) in `index.html` — a large `xN` label over a
+  shrinking timer bar — styled in `src/style.css`. It shows only while a combo
+  (>x1) is active and `updateComboHud()` keeps the bar fill in sync.
+- Bumped version to v0.1.3.
+
 ## 2026-06-19 — High-score persistence (session) (#002)
 
 - Added a `bestScore` field to `Game.ts` (in-memory; persists across "Play

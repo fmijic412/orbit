@@ -6,6 +6,13 @@ import { Collectibles } from "./Collectibles";
 /** Length of a single round, in seconds. */
 const ROUND_SECONDS = 60;
 
+/** Base points awarded per orb before the combo multiplier is applied. */
+const BASE_POINTS = 1;
+/** Seconds you have after a pickup to chain the next one and keep the combo. */
+const COMBO_WINDOW = 2;
+/** Upper bound on the combo multiplier. */
+const MAX_MULTIPLIER = 9;
+
 type GameState = "playing" | "ended";
 
 /**
@@ -28,9 +35,17 @@ export class Game {
   private timeLeft = ROUND_SECONDS;
   private state: GameState = "playing";
 
+  /** Current combo multiplier (1 = no active combo). */
+  private multiplier = 1;
+  /** Time remaining, in seconds, before the combo lapses. */
+  private comboTimer = 0;
+
   private readonly scoreEl = document.getElementById("score");
   private readonly bestEl = document.getElementById("best");
   private readonly timeEl = document.getElementById("time");
+  private readonly comboEl = document.getElementById("combo");
+  private readonly comboMultEl = document.getElementById("combo-mult");
+  private readonly comboBarFillEl = document.getElementById("combo-bar-fill");
   private readonly endScreenEl = document.getElementById("end-screen");
   private readonly finalScoreEl = document.getElementById("final-score");
   private readonly newBestEl = document.getElementById("new-best");
@@ -107,11 +122,12 @@ export class Game {
     }
 
     this.timeLeft = Math.max(0, this.timeLeft - dt);
+    this.decayCombo(dt);
 
     this.player.update(dt, this.input);
     const got = this.collectibles.update(dt, this.player.position);
     if (got > 0) {
-      this.score += got;
+      this.addScore(got);
     }
     this.updateHud();
     this.updateCamera();
@@ -121,11 +137,49 @@ export class Game {
     }
   }
 
+  /**
+   * Awards points for orbs picked up this frame, applying — and extending —
+   * the combo multiplier. All scoring is routed through here so the multiplier
+   * is applied in exactly one place.
+   */
+  private addScore(orbs: number): void {
+    // A pickup while the window is still open chains the combo and bumps the
+    // multiplier; otherwise this pickup starts a fresh combo at x1.
+    if (this.comboTimer > 0) {
+      this.multiplier = Math.min(this.multiplier + 1, MAX_MULTIPLIER);
+    } else {
+      this.multiplier = 1;
+    }
+    this.score += orbs * BASE_POINTS * this.multiplier;
+    this.comboTimer = COMBO_WINDOW;
+  }
+
+  /** Counts the combo window down; resets the multiplier when it lapses. */
+  private decayCombo(dt: number): void {
+    if (this.comboTimer <= 0) return;
+    this.comboTimer = Math.max(0, this.comboTimer - dt);
+    if (this.comboTimer === 0) {
+      this.multiplier = 1;
+    }
+  }
+
   private updateHud(): void {
     if (this.scoreEl) this.scoreEl.textContent = `Score: ${this.score}`;
     if (this.bestEl) this.bestEl.textContent = `Best: ${this.bestScore}`;
     if (this.timeEl) {
       this.timeEl.textContent = `Time: ${Math.ceil(this.timeLeft)}`;
+    }
+    this.updateComboHud();
+  }
+
+  private updateComboHud(): void {
+    const active = this.multiplier > 1 && this.comboTimer > 0;
+    this.comboEl?.classList.toggle("hidden", !active);
+    if (!active) return;
+    if (this.comboMultEl) this.comboMultEl.textContent = `x${this.multiplier}`;
+    if (this.comboBarFillEl) {
+      const pct = Math.max(0, Math.min(1, this.comboTimer / COMBO_WINDOW));
+      this.comboBarFillEl.style.width = `${pct * 100}%`;
     }
   }
 
@@ -149,6 +203,8 @@ export class Game {
   private restart = (): void => {
     this.score = 0;
     this.timeLeft = ROUND_SECONDS;
+    this.multiplier = 1;
+    this.comboTimer = 0;
     this.player.reset();
     this.collectibles.reset();
     this.endScreenEl?.classList.add("hidden");
