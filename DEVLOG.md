@@ -2,6 +2,24 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-06-21 — Particle burst on orb collect (#004)
+
+- New `Particles` system (`src/game/Particles.ts`): a fixed pool of 160 small
+  glowing meshes recycled across bursts, so a steady stream of pickups
+  allocates nothing after construction. Exposes `burst(position, color)`,
+  `update(dt)` and `reset()`.
+- `burst()` sprays 16 shards outward with an upward kick; `update()` integrates
+  gravity + drag and fades/shrinks each shard over its ~0.5s life, hiding and
+  recycling it when finished (no leaks).
+- `Collectibles.update()` now returns the world positions of orbs picked up
+  this frame (instead of just a count); the orb's base colour is exported as
+  `ORB_COLOR` and reused for both the orb material and its burst tint.
+- `Game.ts` creates the system in its constructor, adds `particles.group` to
+  the scene, ticks `particles.update(dt)` every frame (so in-flight bursts
+  finish even after the round ends), fires a burst per collected orb, and
+  clears particles in `restart()`.
+- Bumped version to v0.1.4.
+
 ## 2026-06-20 — Combo multiplier for quick collections (#003)
 
 - Added a combo system to `Game.ts`: new `multiplier` and `comboTimer` fields,

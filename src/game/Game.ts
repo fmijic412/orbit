@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { Input } from "./input";
 import { Player } from "./Player";
-import { Collectibles } from "./Collectibles";
+import { Collectibles, ORB_COLOR } from "./Collectibles";
+import { Particles } from "./Particles";
 
 /** Length of a single round, in seconds. */
 const ROUND_SECONDS = 60;
@@ -29,6 +30,7 @@ export class Game {
   private readonly input = new Input();
   private readonly player = new Player();
   private readonly collectibles = new Collectibles(6);
+  private readonly particles = new Particles();
 
   private score = 0;
   private bestScore = 0;
@@ -66,6 +68,7 @@ export class Game {
     this.buildWorld();
     this.scene.add(this.player.mesh);
     this.scene.add(this.collectibles.group);
+    this.scene.add(this.particles.group);
 
     this.playAgainEl?.addEventListener("click", this.restart);
     this.updateHud();
@@ -115,6 +118,10 @@ export class Game {
   }
 
   private update(dt: number): void {
+    // Particles keep animating even after the round ends so in-flight bursts
+    // finish cleanly.
+    this.particles.update(dt);
+
     if (this.state !== "playing") {
       // Frozen: keep rendering but ignore input, scoring and the clock.
       this.updateCamera();
@@ -125,9 +132,12 @@ export class Game {
     this.decayCombo(dt);
 
     this.player.update(dt, this.input);
-    const got = this.collectibles.update(dt, this.player.position);
-    if (got > 0) {
-      this.addScore(got);
+    const picked = this.collectibles.update(dt, this.player.position);
+    if (picked.length > 0) {
+      for (const pos of picked) {
+        this.particles.burst(pos, ORB_COLOR);
+      }
+      this.addScore(picked.length);
     }
     this.updateHud();
     this.updateCamera();
@@ -207,6 +217,7 @@ export class Game {
     this.comboTimer = 0;
     this.player.reset();
     this.collectibles.reset();
+    this.particles.reset();
     this.endScreenEl?.classList.add("hidden");
     this.updateHud();
     this.state = "playing";
