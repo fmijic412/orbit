@@ -20,7 +20,7 @@ bottom; they get scheduled into a future sprint.
 ## Feel & polish
 
 - [x] Particle burst when an orb is collected
-- [ ] Sound effects + background music (Web Audio)
+- [x] Sound effects + background music (Web Audio)
 - [ ] Trail effect behind the player cube
 - [ ] Screen shake on hazard contact
 - [ ] Animated skybox / gradient background

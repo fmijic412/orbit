@@ -3,6 +3,7 @@ import { Input } from "./input";
 import { Player } from "./Player";
 import { Collectibles, ORB_COLOR } from "./Collectibles";
 import { Particles } from "./Particles";
+import { Audio } from "./Audio";
 
 /** Length of a single round, in seconds. */
 const ROUND_SECONDS = 60;
@@ -31,6 +32,10 @@ export class Game {
   private readonly player = new Player();
   private readonly collectibles = new Collectibles(6);
   private readonly particles = new Particles();
+  private readonly audio = new Audio();
+
+  /** Set once the first user gesture has unblocked + started audio. */
+  private audioStarted = false;
 
   private score = 0;
   private bestScore = 0;
@@ -52,6 +57,7 @@ export class Game {
   private readonly finalScoreEl = document.getElementById("final-score");
   private readonly newBestEl = document.getElementById("new-best");
   private readonly playAgainEl = document.getElementById("play-again");
+  private readonly audioEl = document.getElementById("audio");
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -71,10 +77,34 @@ export class Game {
     this.scene.add(this.particles.group);
 
     this.playAgainEl?.addEventListener("click", this.restart);
+    // Audio must be unblocked by a user gesture; the first keypress or the
+    // Play again button kicks the context and starts the ambience loop.
+    window.addEventListener("keydown", this.onKeyDown);
     this.updateHud();
+    this.updateAudioHud();
 
     this.onResize();
     window.addEventListener("resize", this.onResize);
+  }
+
+  /** First-gesture audio bootstrap plus the "M" mute toggle. */
+  private onKeyDown = (e: KeyboardEvent): void => {
+    this.ensureAudioStarted();
+    if (e.code === "KeyM") {
+      this.audio.toggleMute();
+      this.updateAudioHud();
+    }
+  };
+
+  /** Resumes the audio context and starts ambience on the first gesture. */
+  private ensureAudioStarted(): void {
+    if (this.audioStarted) return;
+    this.audioStarted = true;
+    void this.audio.resume();
+    if (this.state === "playing") {
+      this.audio.startAmbience();
+    }
+    this.updateAudioHud();
   }
 
   private buildWorld(): void {
@@ -138,6 +168,8 @@ export class Game {
         this.particles.burst(pos, ORB_COLOR);
       }
       this.addScore(picked.length);
+      // Pitch the pickup blip up with the combo so chains feel like a scale.
+      this.audio.pickup(this.multiplier - 1);
     }
     this.updateHud();
     this.updateCamera();
@@ -193,8 +225,16 @@ export class Game {
     }
   }
 
+  /** Reflects the current mute state in the HUD audio indicator. */
+  private updateAudioHud(): void {
+    if (!this.audioEl) return;
+    this.audioEl.textContent = this.audio.isMuted ? "♪ Muted (M)" : "♪ Sound (M)";
+    this.audioEl.classList.toggle("muted", this.audio.isMuted);
+  }
+
   private endRound(): void {
     this.state = "ended";
+    this.audio.stopAmbience();
 
     const isNewBest = this.score > this.bestScore;
     if (isNewBest) {
@@ -221,6 +261,11 @@ export class Game {
     this.endScreenEl?.classList.add("hidden");
     this.updateHud();
     this.state = "playing";
+
+    // Clicking "Play again" is itself a gesture, so (re)start audio here.
+    this.ensureAudioStarted();
+    void this.audio.resume();
+    this.audio.startAmbience();
   };
 
   private loop = (): void => {

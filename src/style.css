@@ -55,6 +55,18 @@ body {
   letter-spacing: 0.5px;
 }
 
+#audio {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #7fe0c8;
+}
+
+#audio.muted {
+  color: #8a93a8;
+  opacity: 0.7;
+}
+
 #hint {
   font-size: 13px;
   opacity: 0.6;
