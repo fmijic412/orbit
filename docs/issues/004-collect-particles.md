@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-06-21
 - **Labels:** polish, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-06-21)
 
 ## Motivation
 
@@ -10,9 +10,9 @@ A visual pop on collection makes pickups feel satisfying.
 
 ## Acceptance criteria
 
-- [ ] Collecting an orb spawns a short-lived particle burst at its position.
-- [ ] Particles fade/scale out and are removed when finished (no leaks).
-- [ ] Effect runs at a stable frame rate with several bursts on screen.
+- [x] Collecting an orb spawns a short-lived particle burst at its position.
+- [x] Particles fade/scale out and are removed when finished (no leaks).
+- [x] Effect runs at a stable frame rate with several bursts on screen.
 
 ## Technical notes
 

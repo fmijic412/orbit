@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-06-22
 - **Labels:** polish, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-06-22)
 
 ## Motivation
 
@@ -10,10 +10,10 @@ Audio feedback dramatically improves game feel.
 
 ## Acceptance criteria
 
-- [ ] A pickup sound plays on each orb collected.
-- [ ] A subtle background ambience/music loop plays during a round.
-- [ ] A mute toggle (e.g. "M" key) is available; state reflected in the HUD.
-- [ ] Audio is created with the Web Audio API (no external asset files needed).
+- [x] A pickup sound plays on each orb collected.
+- [x] A subtle background ambience/music loop plays during a round.
+- [x] A mute toggle (e.g. "M" key) is available; state reflected in the HUD.
+- [x] Audio is created with the Web Audio API (no external asset files needed).
 
 ## Technical notes
 
