@@ -4,6 +4,7 @@ import { Player } from "./Player";
 import { Collectibles, ORB_COLOR } from "./Collectibles";
 import { Particles } from "./Particles";
 import { Audio } from "./Audio";
+import { Hazards } from "./Hazards";
 
 /** Length of a single round, in seconds. */
 const ROUND_SECONDS = 60;
@@ -14,6 +15,13 @@ const BASE_POINTS = 1;
 const COMBO_WINDOW = 2;
 /** Upper bound on the combo multiplier. */
 const MAX_MULTIPLIER = 9;
+
+/** Points deducted when the player touches a hazard cube. */
+const HAZARD_PENALTY = 5;
+/** Colour of the burst played when a hazard hits the player. */
+const HAZARD_BURST_COLOR = 0xff3b3b;
+/** Seconds of post-hit invulnerability so one bump is not a chain of hits. */
+const IFRAMES_SECONDS = 1.2;
 
 type GameState = "playing" | "ended";
 
@@ -32,6 +40,7 @@ export class Game {
   private readonly player = new Player();
   private readonly collectibles = new Collectibles(6);
   private readonly particles = new Particles();
+  private readonly hazards = new Hazards(4);
   private readonly audio = new Audio();
 
   /** Set once the first user gesture has unblocked + started audio. */
@@ -46,6 +55,9 @@ export class Game {
   private multiplier = 1;
   /** Time remaining, in seconds, before the combo lapses. */
   private comboTimer = 0;
+
+  /** Remaining invulnerability time after a hazard hit (0 = vulnerable). */
+  private iFrames = 0;
 
   private readonly scoreEl = document.getElementById("score");
   private readonly bestEl = document.getElementById("best");
@@ -74,6 +86,7 @@ export class Game {
     this.buildWorld();
     this.scene.add(this.player.mesh);
     this.scene.add(this.collectibles.group);
+    this.scene.add(this.hazards.group);
     this.scene.add(this.particles.group);
 
     this.playAgainEl?.addEventListener("click", this.restart);
@@ -171,6 +184,10 @@ export class Game {
       // Pitch the pickup blip up with the combo so chains feel like a scale.
       this.audio.pickup(this.multiplier - 1);
     }
+
+    this.hazards.update(dt);
+    this.updateHazards(dt);
+
     this.updateHud();
     this.updateCamera();
 
@@ -194,6 +211,33 @@ export class Game {
     }
     this.score += orbs * BASE_POINTS * this.multiplier;
     this.comboTimer = COMBO_WINDOW;
+  }
+
+  /**
+   * Resolves hazard contact and the post-hit invulnerability window. While
+   * invulnerable the player cube blinks; a fresh hit (only possible once the
+   * window lapses) deducts points, breaks the combo and plays a buzz.
+   */
+  private updateHazards(dt: number): void {
+    if (this.iFrames > 0) {
+      this.iFrames = Math.max(0, this.iFrames - dt);
+      // Blink a few times per second while invulnerable.
+      this.player.mesh.visible = Math.floor(this.iFrames * 10) % 2 === 0;
+      if (this.iFrames === 0) {
+        this.player.mesh.visible = true;
+      }
+      return;
+    }
+
+    if (this.hazards.collides(this.player.position)) {
+      this.score = Math.max(0, this.score - HAZARD_PENALTY);
+      // A hit breaks any active combo.
+      this.multiplier = 1;
+      this.comboTimer = 0;
+      this.iFrames = IFRAMES_SECONDS;
+      this.particles.burst(this.player.position, HAZARD_BURST_COLOR);
+      this.audio.hit();
+    }
   }
 
   /** Counts the combo window down; resets the multiplier when it lapses. */
@@ -236,6 +280,10 @@ export class Game {
     this.state = "ended";
     this.audio.stopAmbience();
 
+    // Don't leave the cube mid-blink if the round ends during i-frames.
+    this.iFrames = 0;
+    this.player.mesh.visible = true;
+
     const isNewBest = this.score > this.bestScore;
     if (isNewBest) {
       this.bestScore = this.score;
@@ -255,8 +303,11 @@ export class Game {
     this.timeLeft = ROUND_SECONDS;
     this.multiplier = 1;
     this.comboTimer = 0;
+    this.iFrames = 0;
     this.player.reset();
+    this.player.mesh.visible = true;
     this.collectibles.reset();
+    this.hazards.reset();
     this.particles.reset();
     this.endScreenEl?.classList.add("hidden");
     this.updateHud();

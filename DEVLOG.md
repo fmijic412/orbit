@@ -2,6 +2,26 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-06-23 — Moving hazard cubes (#006)
+
+- New `Hazards` system (`src/game/Hazards.ts`): a `THREE.Group` of 4 red cubes,
+  each with its own per-axis velocity. `update(dt)` advances them along straight
+  paths and bounces them off the arena edges, clamping position so they never
+  leave the bounds. Cubes tumble slightly so they read as dangerous.
+- `collides(playerPos)` does a cheap circular XZ test combining the hazard and
+  player half-sizes, so contact feels fair rather than pixel-perfect.
+- `Game.ts` creates the system in its constructor, adds its group to the scene,
+  and ticks it from `update()` only while the round is playing (hazards freeze
+  on the end screen).
+- Hazard contact now costs `HAZARD_PENALTY` (5) points (floored at 0), breaks
+  any active combo, and opens a 1.2s invulnerability window during which the
+  player cube blinks; a fresh hit is only possible after the window lapses, so a
+  single bump can't drain the score. Each hit also fires a red particle burst.
+- New `Audio.hit()` plays a short descending sawtooth buzz so a penalty reads as
+  clearly negative against the bright pickup blip.
+- `restart()` and `endRound()` reset i-frames and restore player visibility so
+  the cube is never left mid-blink.
+
 ## 2026-06-22 — Sound effects + background music (#005)
 
 - New `Audio` system (`src/game/Audio.ts`): a thin wrapper around a single

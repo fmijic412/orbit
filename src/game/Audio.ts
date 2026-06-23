@@ -96,6 +96,29 @@ export class Audio {
   }
 
   /**
+   * Plays a short, harsh "buzz" for hitting a hazard: a descending sawtooth
+   * tone so a penalty reads as clearly negative against the bright pickup blip.
+   */
+  hit(): void {
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.25);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.5, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+
+    osc.connect(gain);
+    gain.connect(this.master);
+    osc.start(now);
+    osc.stop(now + 0.32);
+  }
+
+  /**
    * Starts the looped ambience pad: two slightly detuned oscillators through a
    * lowpass filter, with a slow LFO breathing the gain. Idempotent — a second
    * call while already running is a no-op.

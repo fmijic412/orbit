@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-06-23
 - **Labels:** gameplay, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-06-23)
 
 ## Motivation
 
@@ -10,10 +10,10 @@ Hazards introduce risk and force players to navigate, not just sweep the arena.
 
 ## Acceptance criteria
 
-- [ ] A few red hazard cubes roam the arena along simple paths.
-- [ ] Touching a hazard costs points (and/or breaks the combo) with a brief
+- [x] A few red hazard cubes roam the arena along simple paths.
+- [x] Touching a hazard costs points (and/or breaks the combo) with a brief
       invulnerability window to avoid repeat hits.
-- [ ] Hazards stay inside the arena bounds.
+- [x] Hazards stay inside the arena bounds.
 
 ## Technical notes
 
