@@ -2,6 +2,21 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-06-24 — Screen shake on hazard contact (#007)
+
+- Added a decaying `trauma` value (0..1) and a `shake(amount)` method to the
+  camera logic in `Game.ts`. A hazard hit calls `shake(HAZARD_SHAKE)` right
+  after the existing penalty/burst/buzz, so the jolt lands with the impact.
+- `updateCamera(dt)` now subtracts the previous frame's offset before running
+  the follow lerp, then applies a fresh randomized offset on top — so the
+  shake rides on the follow camera without ever accumulating or fighting the
+  lerp toward the player. The offset is squared from trauma (`trauma²`) so
+  small amounts stay gentle, and is capped at `SHAKE_MAX_OFFSET` (0.7 units)
+  to avoid motion discomfort. Trauma bleeds out at `TRAUMA_DECAY` per second.
+- The shake keeps decaying on the end screen (the frozen branch passes `dt`),
+  so a hit landing as the timer expires doesn't freeze the camera mid-jolt.
+- `restart()` resets `trauma` to 0 so a new round always starts steady.
+
 ## 2026-06-23 — Moving hazard cubes (#006)
 
 - New `Hazards` system (`src/game/Hazards.ts`): a `THREE.Group` of 4 red cubes,

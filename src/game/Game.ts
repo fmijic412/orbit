@@ -23,6 +23,13 @@ const HAZARD_BURST_COLOR = 0xff3b3b;
 /** Seconds of post-hit invulnerability so one bump is not a chain of hits. */
 const IFRAMES_SECONDS = 1.2;
 
+/** Trauma added by a hazard hit (0..1). Kept subtle to avoid discomfort. */
+const HAZARD_SHAKE = 0.6;
+/** How quickly trauma bleeds back to 0, in trauma-units per second. */
+const TRAUMA_DECAY = 1.6;
+/** Peak positional offset, in world units, at full trauma. */
+const SHAKE_MAX_OFFSET = 0.7;
+
 type GameState = "playing" | "ended";
 
 /**
@@ -58,6 +65,11 @@ export class Game {
 
   /** Remaining invulnerability time after a hazard hit (0 = vulnerable). */
   private iFrames = 0;
+
+  /** Current camera trauma (0 = still, 1 = max shake); decays every frame. */
+  private trauma = 0;
+  /** The offset added to the camera last frame, removed before re-following. */
+  private readonly shakeOffset = new THREE.Vector3();
 
   private readonly scoreEl = document.getElementById("score");
   private readonly bestEl = document.getElementById("best");
@@ -152,12 +164,38 @@ export class Game {
     this.camera.updateProjectionMatrix();
   };
 
-  private updateCamera(): void {
+  /**
+   * Adds trauma to the camera. Trauma is clamped to [0, 1] so repeated hits
+   * intensify the shake without ever exceeding the (subtle) cap.
+   */
+  private shake(amount: number): void {
+    this.trauma = Math.min(1, this.trauma + amount);
+  }
+
+  private updateCamera(dt: number): void {
+    // Undo last frame's shake so the follow lerp works from the clean position
+    // and the offset can never accumulate.
+    this.camera.position.sub(this.shakeOffset);
+    this.shakeOffset.set(0, 0, 0);
+
     // Smoothly follow the player from behind and above.
     const target = this.player.position;
     const desired = new THREE.Vector3(target.x, 14, target.z + 16);
     this.camera.position.lerp(desired, 0.08);
     this.camera.lookAt(target.x, 0.5, target.z);
+
+    // Bleed trauma down and apply a fresh randomized offset on top of the
+    // follow position. Squaring trauma makes small amounts gentle.
+    this.trauma = Math.max(0, this.trauma - TRAUMA_DECAY * dt);
+    if (this.trauma > 0) {
+      const power = this.trauma * this.trauma * SHAKE_MAX_OFFSET;
+      this.shakeOffset.set(
+        (Math.random() * 2 - 1) * power,
+        (Math.random() * 2 - 1) * power,
+        (Math.random() * 2 - 1) * power,
+      );
+      this.camera.position.add(this.shakeOffset);
+    }
   }
 
   private update(dt: number): void {
@@ -166,8 +204,9 @@ export class Game {
     this.particles.update(dt);
 
     if (this.state !== "playing") {
-      // Frozen: keep rendering but ignore input, scoring and the clock.
-      this.updateCamera();
+      // Frozen: keep rendering but ignore input, scoring and the clock. An
+      // in-flight shake still decays so it doesn't freeze mid-jolt.
+      this.updateCamera(dt);
       return;
     }
 
@@ -189,7 +228,7 @@ export class Game {
     this.updateHazards(dt);
 
     this.updateHud();
-    this.updateCamera();
+    this.updateCamera(dt);
 
     if (this.timeLeft <= 0) {
       this.endRound();
@@ -237,6 +276,7 @@ export class Game {
       this.iFrames = IFRAMES_SECONDS;
       this.particles.burst(this.player.position, HAZARD_BURST_COLOR);
       this.audio.hit();
+      this.shake(HAZARD_SHAKE);
     }
   }
 
@@ -304,6 +344,7 @@ export class Game {
     this.multiplier = 1;
     this.comboTimer = 0;
     this.iFrames = 0;
+    this.trauma = 0;
     this.player.reset();
     this.player.mesh.visible = true;
     this.collectibles.reset();

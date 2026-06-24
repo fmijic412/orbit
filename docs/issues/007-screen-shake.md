@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-06-24
 - **Labels:** polish, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-06-24)
 - **Depends on:** 006
 
 ## Motivation
@@ -11,9 +11,9 @@ Screen shake sells the impact of hitting a hazard.
 
 ## Acceptance criteria
 
-- [ ] Hitting a hazard triggers a brief camera shake that decays smoothly.
-- [ ] Shake does not permanently offset the follow camera or fight its lerp.
-- [ ] Intensity is subtle enough to avoid motion discomfort.
+- [x] Hitting a hazard triggers a brief camera shake that decays smoothly.
+- [x] Shake does not permanently offset the follow camera or fight its lerp.
+- [x] Intensity is subtle enough to avoid motion discomfort.
 
 ## Technical notes
 
