@@ -119,6 +119,33 @@ export class Audio {
   }
 
   /**
+   * Plays a bright rising arpeggio for collecting a power-up, so it reads as a
+   * clearly positive, more significant event than a normal orb blip.
+   */
+  powerup(): void {
+    const now = this.ctx.currentTime;
+    // C5, E5, G5, C6 — a major arpeggio rolled quickly.
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    for (let i = 0; i < notes.length; i++) {
+      const t = now + i * 0.06;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(notes[i], t);
+
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.5, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+
+      osc.connect(gain);
+      gain.connect(this.master);
+      osc.start(t);
+      osc.stop(t + 0.24);
+    }
+  }
+
+  /**
    * Starts the looped ambience pad: two slightly detuned oscillators through a
    * lowpass filter, with a slow LFO breathing the gain. Idempotent — a second
    * call while already running is a no-op.
