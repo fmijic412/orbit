@@ -5,6 +5,7 @@ import { Collectibles, ORB_COLOR } from "./Collectibles";
 import { Particles } from "./Particles";
 import { Audio } from "./Audio";
 import { Hazards } from "./Hazards";
+import { PowerUps, POWERUP_COLOR, type PowerUpType } from "./PowerUps";
 
 /** Length of a single round, in seconds. */
 const ROUND_SECONDS = 60;
@@ -30,6 +31,13 @@ const TRAUMA_DECAY = 1.6;
 /** Peak positional offset, in world units, at full trauma. */
 const SHAKE_MAX_OFFSET = 0.7;
 
+/** How long a Speed power-up lasts, in seconds. */
+const SPEED_BOOST_SECONDS = 6;
+/** Move-speed multiplier applied while a Speed power-up is active. */
+const SPEED_BOOST_SCALE = 1.6;
+/** How long a Magnet power-up lasts, in seconds. */
+const MAGNET_SECONDS = 6;
+
 type GameState = "playing" | "ended";
 
 /**
@@ -48,6 +56,7 @@ export class Game {
   private readonly collectibles = new Collectibles(6);
   private readonly particles = new Particles();
   private readonly hazards = new Hazards(4);
+  private readonly powerups = new PowerUps();
   private readonly audio = new Audio();
 
   /** Set once the first user gesture has unblocked + started audio. */
@@ -66,6 +75,11 @@ export class Game {
   /** Remaining invulnerability time after a hazard hit (0 = vulnerable). */
   private iFrames = 0;
 
+  /** Remaining Speed power-up time, in seconds (0 = inactive). */
+  private speedTimer = 0;
+  /** Remaining Magnet power-up time, in seconds (0 = inactive). */
+  private magnetTimer = 0;
+
   /** Current camera trauma (0 = still, 1 = max shake); decays every frame. */
   private trauma = 0;
   /** The offset added to the camera last frame, removed before re-following. */
@@ -82,6 +96,8 @@ export class Game {
   private readonly newBestEl = document.getElementById("new-best");
   private readonly playAgainEl = document.getElementById("play-again");
   private readonly audioEl = document.getElementById("audio");
+  private readonly puSpeedEl = document.getElementById("pu-speed");
+  private readonly puMagnetEl = document.getElementById("pu-magnet");
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -99,6 +115,7 @@ export class Game {
     this.scene.add(this.player.mesh);
     this.scene.add(this.collectibles.group);
     this.scene.add(this.hazards.group);
+    this.scene.add(this.powerups.group);
     this.scene.add(this.particles.group);
 
     this.playAgainEl?.addEventListener("click", this.restart);
@@ -213,8 +230,12 @@ export class Game {
     this.timeLeft = Math.max(0, this.timeLeft - dt);
     this.decayCombo(dt);
 
-    this.player.update(dt, this.input);
-    const picked = this.collectibles.update(dt, this.player.position);
+    // Apply active power-up effects for this frame, then bleed their timers.
+    const speedScale = this.speedTimer > 0 ? SPEED_BOOST_SCALE : 1;
+    const attract = this.magnetTimer > 0 ? this.player.position : null;
+
+    this.player.update(dt, this.input, speedScale);
+    const picked = this.collectibles.update(dt, this.player.position, attract);
     if (picked.length > 0) {
       for (const pos of picked) {
         this.particles.burst(pos, ORB_COLOR);
@@ -223,6 +244,12 @@ export class Game {
       // Pitch the pickup blip up with the combo so chains feel like a scale.
       this.audio.pickup(this.multiplier - 1);
     }
+
+    const grabbed = this.powerups.update(dt, this.player.position);
+    if (grabbed) {
+      this.activatePowerUp(grabbed);
+    }
+    this.tickPowerTimers(dt);
 
     this.hazards.update(dt);
     this.updateHazards(dt);
@@ -289,6 +316,31 @@ export class Game {
     }
   }
 
+  /**
+   * Activates a collected power-up. Picking up the same type again simply
+   * refreshes its timer to full, so effects can be re-acquired before they
+   * expire.
+   */
+  private activatePowerUp(type: PowerUpType): void {
+    if (type === "speed") {
+      this.speedTimer = SPEED_BOOST_SECONDS;
+    } else {
+      this.magnetTimer = MAGNET_SECONDS;
+    }
+    this.particles.burst(this.player.position, POWERUP_COLOR[type]);
+    this.audio.powerup();
+  }
+
+  /** Bleeds the active power-up timers toward 0 each frame. */
+  private tickPowerTimers(dt: number): void {
+    if (this.speedTimer > 0) {
+      this.speedTimer = Math.max(0, this.speedTimer - dt);
+    }
+    if (this.magnetTimer > 0) {
+      this.magnetTimer = Math.max(0, this.magnetTimer - dt);
+    }
+  }
+
   private updateHud(): void {
     if (this.scoreEl) this.scoreEl.textContent = `Score: ${this.score}`;
     if (this.bestEl) this.bestEl.textContent = `Best: ${this.bestScore}`;
@@ -296,6 +348,25 @@ export class Game {
       this.timeEl.textContent = `Time: ${Math.ceil(this.timeLeft)}`;
     }
     this.updateComboHud();
+    this.updatePowerUpHud();
+  }
+
+  /** Shows/hides each power-up indicator and refreshes its countdown. */
+  private updatePowerUpHud(): void {
+    this.setPowerUpIndicator(this.puSpeedEl, this.speedTimer);
+    this.setPowerUpIndicator(this.puMagnetEl, this.magnetTimer);
+  }
+
+  private setPowerUpIndicator(el: HTMLElement | null, timer: number): void {
+    if (!el) return;
+    const active = timer > 0;
+    el.classList.toggle("hidden", !active);
+    if (active) {
+      const timeEl = el.querySelector(".pu-time");
+      if (timeEl) {
+        timeEl.textContent = `${Math.ceil(timer)}s`;
+      }
+    }
   }
 
   private updateComboHud(): void {
@@ -324,6 +395,10 @@ export class Game {
     this.iFrames = 0;
     this.player.mesh.visible = true;
 
+    // Clear any active power-up effects so their HUD indicators don't linger.
+    this.speedTimer = 0;
+    this.magnetTimer = 0;
+
     const isNewBest = this.score > this.bestScore;
     if (isNewBest) {
       this.bestScore = this.score;
@@ -345,10 +420,13 @@ export class Game {
     this.comboTimer = 0;
     this.iFrames = 0;
     this.trauma = 0;
+    this.speedTimer = 0;
+    this.magnetTimer = 0;
     this.player.reset();
     this.player.mesh.visible = true;
     this.collectibles.reset();
     this.hazards.reset();
+    this.powerups.reset();
     this.particles.reset();
     this.endScreenEl?.classList.add("hidden");
     this.updateHud();

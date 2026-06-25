@@ -32,10 +32,14 @@ export class Player {
     this.mesh.position.set(0, 0.5, 0);
   }
 
-  update(dt: number, input: Input): void {
+  /**
+   * Moves the player from input. `speedScale` (default 1) multiplies the base
+   * move speed so an active Speed power-up can make the cube dash.
+   */
+  update(dt: number, input: Input, speedScale = 1): void {
     const dir = new THREE.Vector3(input.moveX, 0, -input.moveZ);
     if (dir.lengthSq() > 0) {
-      dir.normalize().multiplyScalar(SPEED * dt);
+      dir.normalize().multiplyScalar(SPEED * speedScale * dt);
       this.mesh.position.add(dir);
       this.mesh.position.x = THREE.MathUtils.clamp(
         this.mesh.position.x,

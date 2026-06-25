@@ -114,6 +114,45 @@ body {
   transition: width 0.08s linear;
 }
 
+#powerups {
+  position: fixed;
+  top: 52px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.powerup {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(5, 6, 10, 0.55);
+}
+
+.powerup.hidden {
+  display: none;
+}
+
+.pu-time {
+  opacity: 0.85;
+}
+
+#pu-speed {
+  color: #66ff99;
+  text-shadow: 0 0 12px rgba(102, 255, 153, 0.6);
+}
+
+#pu-magnet {
+  color: #c56bff;
+  text-shadow: 0 0 12px rgba(197, 107, 255, 0.6);
+}
+
 #end-screen {
   position: fixed;
   inset: 0;

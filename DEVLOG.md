@@ -2,6 +2,27 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-06-25 — Power-ups: speed boost + orb magnet (#008)
+
+- Added `src/game/PowerUps.ts`: a small system that keeps at most one pickup in
+  the arena. A randomized spawn timer (`SPAWN_MIN`..`SPAWN_MAX`, 8–14s) drops a
+  random pickup — a green octahedron for **Speed**, a purple torus for
+  **Magnet** — which bobs and spins until collected. `update(dt, playerPos)`
+  returns the collected `PowerUpType` (or `null`) and re-arms the timer.
+- `Player.update()` gained an optional `speedScale` (default 1); an active Speed
+  power-up passes `SPEED_BOOST_SCALE` (1.6×) for `SPEED_BOOST_SECONDS` (6s).
+- `Collectibles.update()` gained an optional `attract` target; while Magnet is
+  active (target = player) orbs within `MAGNET_RADIUS` (7u) are steered toward
+  the player, pulling harder the closer they are, capped so they never
+  overshoot. Magnet lasts `MAGNET_SECONDS` (6s).
+- `Game.ts` owns `speedTimer`/`magnetTimer`, ticks them in `update()`, applies
+  the effects, and on pickup fires a particle burst + a new `Audio.powerup()`
+  rising arpeggio. Re-collecting a live effect refreshes its timer to full.
+- HUD: new `#powerups` indicators (`index.html` + `style.css`) show ⚡ Speed and
+  🧲 Magnet with a live second countdown; they hide on expiry, round end, and
+  restart. `restart()`/`endRound()` clear both timers and `powerups.reset()`
+  re-arms a fresh spawn.
+
 ## 2026-06-24 — Screen shake on hazard contact (#007)
 
 - Added a decaying `trauma` value (0..1) and a `shake(amount)` method to the
