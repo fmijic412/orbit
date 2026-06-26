@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-06-26
 - **Labels:** gameplay, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-06-26)
 
 ## Motivation
 
@@ -10,10 +10,10 @@ Varied orb values reward prioritization and add visual variety.
 
 ## Acceptance criteria
 
-- [ ] At least three orb tiers (e.g. common=1, rare=3, bonus=5) with distinct
+- [x] At least three orb tiers (e.g. common=1, rare=3, bonus=5) with distinct
       colors/sizes.
-- [ ] Rarer orbs spawn less often; rarest may be time-limited.
-- [ ] Points awarded reflect the orb's value (and still respect the combo
+- [x] Rarer orbs spawn less often; rarest may be time-limited.
+- [x] Points awarded reflect the orb's value (and still respect the combo
       multiplier).
 
 ## Technical notes
