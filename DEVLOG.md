@@ -2,6 +2,24 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-06-26 — Multiple orb types worth different points (#009)
+
+- Reworked `src/game/Collectibles.ts` around an `OrbTier` model. Three tiers,
+  each with its own colour, size and value: **common** (gold, 1pt), **rare**
+  (cyan, 1.28×, 3pt) and **bonus** (magenta, 1.55×, 5pt). An `ORB_TIERS` table
+  drives the styling so adding/tuning a tier is a one-line change.
+- Spawn selection is weighted by rarity (`weight` 70 / 24 / 6), so commons
+  dominate and bonuses are scarce. The bonus tier is **time-limited**: each orb
+  carries a `life` (6s for bonus, `Infinity` otherwise); when it lapses the orb
+  re-rolls a new tier and teleports, so an ignored high-value orb won't linger.
+- `Collectibles.update()` now returns `OrbPickup[]` — `{ position, value,
+  color }` per orb — instead of bare positions, so scoring reflects value and
+  each collect burst is tinted in the orb's own tier colour.
+- `Game.ts` sums the picked orbs' `value` and routes it through `addScore()`
+  (renamed param `orbs` → `value`), so the combo multiplier still applies on top
+  of tier value. Dropped the now-unused `ORB_COLOR` import; bursts use per-orb
+  colour. Bumped version to 0.1.9.
+
 ## 2026-06-25 — Power-ups: speed boost + orb magnet (#008)
 
 - Added `src/game/PowerUps.ts`: a small system that keeps at most one pickup in

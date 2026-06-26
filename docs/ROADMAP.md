@@ -14,7 +14,7 @@ bottom; they get scheduled into a future sprint.
 - [x] Combo multiplier for collecting orbs in quick succession
 - [x] Moving "hazard" cubes that cost points on contact
 - [x] Power-ups (speed boost, magnet that pulls nearby orbs)
-- [ ] Multiple orb types worth different points
+- [x] Multiple orb types worth different points
 - [ ] Levels / increasing difficulty over time
 
 ## Feel & polish

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { Input } from "./input";
 import { Player } from "./Player";
-import { Collectibles, ORB_COLOR } from "./Collectibles";
+import { Collectibles } from "./Collectibles";
 import { Particles } from "./Particles";
 import { Audio } from "./Audio";
 import { Hazards } from "./Hazards";
@@ -237,10 +237,14 @@ export class Game {
     this.player.update(dt, this.input, speedScale);
     const picked = this.collectibles.update(dt, this.player.position, attract);
     if (picked.length > 0) {
-      for (const pos of picked) {
-        this.particles.burst(pos, ORB_COLOR);
+      // Burst each orb in its own tier colour and sum the points it's worth so
+      // rarer orbs score more — all routed through addScore for the multiplier.
+      let value = 0;
+      for (const orb of picked) {
+        this.particles.burst(orb.position, orb.color);
+        value += orb.value;
       }
-      this.addScore(picked.length);
+      this.addScore(value);
       // Pitch the pickup blip up with the combo so chains feel like a scale.
       this.audio.pickup(this.multiplier - 1);
     }
@@ -264,10 +268,11 @@ export class Game {
 
   /**
    * Awards points for orbs picked up this frame, applying — and extending —
-   * the combo multiplier. All scoring is routed through here so the multiplier
-   * is applied in exactly one place.
+   * the combo multiplier. `value` is the summed point value of those orbs (so
+   * rarer, higher-tier orbs score more). All scoring is routed through here so
+   * the multiplier is applied in exactly one place.
    */
-  private addScore(orbs: number): void {
+  private addScore(value: number): void {
     // A pickup while the window is still open chains the combo and bumps the
     // multiplier; otherwise this pickup starts a fresh combo at x1.
     if (this.comboTimer > 0) {
@@ -275,7 +280,7 @@ export class Game {
     } else {
       this.multiplier = 1;
     }
-    this.score += orbs * BASE_POINTS * this.multiplier;
+    this.score += value * BASE_POINTS * this.multiplier;
     this.comboTimer = COMBO_WINDOW;
   }
 
