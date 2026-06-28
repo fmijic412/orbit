@@ -39,7 +39,7 @@ const SPEED_BOOST_SCALE = 1.6;
 /** How long a Magnet power-up lasts, in seconds. */
 const MAGNET_SECONDS = 6;
 
-type GameState = "playing" | "ended";
+type GameState = "playing" | "paused" | "ended";
 
 /**
  * Top-level game controller: owns the renderer, scene, camera and the
@@ -97,6 +97,8 @@ export class Game {
   private readonly finalScoreEl = document.getElementById("final-score");
   private readonly newBestEl = document.getElementById("new-best");
   private readonly playAgainEl = document.getElementById("play-again");
+  private readonly pauseScreenEl = document.getElementById("pause-screen");
+  private readonly resumeEl = document.getElementById("resume");
   private readonly audioEl = document.getElementById("audio");
   private readonly puSpeedEl = document.getElementById("pu-speed");
   private readonly puMagnetEl = document.getElementById("pu-magnet");
@@ -122,6 +124,7 @@ export class Game {
     this.scene.add(this.particles.group);
 
     this.playAgainEl?.addEventListener("click", this.restart);
+    this.resumeEl?.addEventListener("click", this.resume);
     // Audio must be unblocked by a user gesture; the first keypress or the
     // Play again button kicks the context and starts the ambience loop.
     window.addEventListener("keydown", this.onKeyDown);
@@ -132,13 +135,40 @@ export class Game {
     window.addEventListener("resize", this.onResize);
   }
 
-  /** First-gesture audio bootstrap plus the "M" mute toggle. */
+  /** First-gesture audio bootstrap, the "M" mute toggle and Esc pause. */
   private onKeyDown = (e: KeyboardEvent): void => {
     this.ensureAudioStarted();
     if (e.code === "KeyM") {
       this.audio.toggleMute();
       this.updateAudioHud();
+    } else if (e.code === "Escape") {
+      this.togglePause();
     }
+  };
+
+  /** Esc toggles pause, but only mid-round (never on the end screen). */
+  private togglePause(): void {
+    if (this.state === "playing") {
+      this.pause();
+    } else if (this.state === "paused") {
+      this.resume();
+    }
+  }
+
+  /** Freezes the round and shows the pause overlay; ducks the audio mix. */
+  private pause(): void {
+    if (this.state !== "playing") return;
+    this.state = "paused";
+    this.audio.setDucked(true);
+    this.pauseScreenEl?.classList.remove("hidden");
+  }
+
+  /** Resumes a paused round exactly where it left off. */
+  private resume = (): void => {
+    if (this.state !== "paused") return;
+    this.state = "playing";
+    this.audio.setDucked(false);
+    this.pauseScreenEl?.classList.add("hidden");
   };
 
   /** Resumes the audio context and starts ambience on the first gesture. */
@@ -219,6 +249,14 @@ export class Game {
   }
 
   private update(dt: number): void {
+    if (this.state === "paused") {
+      // Fully frozen: the loop keeps re-rendering the current frame, but no
+      // simulation, scoring, audio, particles or camera motion advances, so
+      // resuming continues exactly where it left off. (dt is already clamped in
+      // the loop, so no spike accumulates across the pause.)
+      return;
+    }
+
     // Particles and the trail keep animating even after the round ends so any
     // in-flight bursts and ghost segments fade out cleanly. The player can't
     // move once frozen, so no new ghosts are dropped.
@@ -226,7 +264,7 @@ export class Game {
     this.trail.update(dt, this.player.position);
 
     if (this.state !== "playing") {
-      // Frozen: keep rendering but ignore input, scoring and the clock. An
+      // Round over: keep rendering but ignore input, scoring and the clock. An
       // in-flight shake still decays so it doesn't freeze mid-jolt.
       this.updateCamera(dt);
       return;
@@ -440,6 +478,8 @@ export class Game {
     this.particles.reset();
     this.trail.reset();
     this.endScreenEl?.classList.add("hidden");
+    this.pauseScreenEl?.classList.add("hidden");
+    this.audio.setDucked(false);
     this.updateHud();
     this.state = "playing";
 

@@ -2,6 +2,25 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-06-28 — Pause (Esc) overlay (#011)
+
+- Added a `"paused"` branch to the game state. Pressing **Esc** mid-round
+  toggles pause; a `#pause-screen` overlay (title "Paused" + a **Resume**
+  button) fades in over the scene. Esc again, or clicking Resume, continues
+  exactly where the round left off.
+- In `Game.update()`, the `paused` state returns immediately before any
+  simulation, scoring, particle/trail or camera work runs — so the timer and
+  all motion truly freeze while the loop keeps re-rendering the last frame. The
+  loop already clamps `clock.getDelta()` to 0.05s, so no `dt` spike accumulates
+  across the pause.
+- Audio now ducks (rather than fully muting) while paused: `Audio.setDucked()`
+  ramps the master gain to 25% of normal, composing with the existing mute flag
+  via a single `applyMasterGain()` helper so the two effects never fight.
+- `restart()` defensively hides the pause overlay and unducks audio; the HUD
+  hint now mentions "Esc to pause".
+- Files: `src/game/Game.ts`, `src/game/Audio.ts`, `index.html`,
+  `src/style.css`. Bumped version to 0.1.11.
+
 ## 2026-06-27 — Trail effect behind the player cube (#010)
 
 - Added `src/game/Trail.ts`: a pooled, fading motion trail. A fixed pool of 24

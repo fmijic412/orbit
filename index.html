@@ -12,7 +12,7 @@
       <span id="best">Best: 0</span>
       <span id="time">Time: 60</span>
       <span id="audio">♪ Sound (M)</span>
-      <span id="hint">WASD / Arrows to move &middot; collect the glowing orbs &middot; M to mute</span>
+      <span id="hint">WASD / Arrows to move &middot; collect the glowing orbs &middot; M to mute &middot; Esc to pause</span>
     </div>
     <div id="combo" class="hidden">
       <span id="combo-mult">x2</span>
@@ -23,6 +23,13 @@
       <span id="pu-magnet" class="powerup hidden">&#129522; Magnet <span class="pu-time"></span></span>
     </div>
     <canvas id="game"></canvas>
+    <div id="pause-screen" class="hidden">
+      <div id="pause-panel">
+        <h1>Paused</h1>
+        <p id="pause-hint">Press Esc to resume</p>
+        <button id="resume" type="button">Resume</button>
+      </div>
+    </div>
     <div id="end-screen" class="hidden">
       <div id="end-panel">
         <h1>Time's up!</h1>
