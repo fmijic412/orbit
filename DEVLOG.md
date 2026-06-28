@@ -2,7 +2,21 @@
 
 A dated record of what changed each day. Newest entries on top.
 
-## 2026-06-26 — Multiple orb types worth different points (#009)
+## 2026-06-27 — Trail effect behind the player cube (#010)
+
+- Added `src/game/Trail.ts`: a pooled, fading motion trail. A fixed pool of 24
+  "ghost" cubes (shared `BoxGeometry`, per-ghost `MeshBasicMaterial`) is
+  recycled round-robin, so the trail is capped and allocates nothing after
+  construction. A ghost is dropped at the player's position only once it has
+  moved `MIN_STEP` (0.45u) since the last drop, then fades and shrinks from
+  `START_OPACITY`/`START_SCALE` to zero over `SEGMENT_LIFE` (0.5s).
+- Because new ghosts are only emitted while moving, the trail fades out on its
+  own when the player stands still. The trail uses the player's blue tint and
+  is drawn additively-soft (`transparent`, `depthWrite: false`).
+- `Game.ts` creates the `Trail` in the constructor, adds `trail.group` to the
+  scene, ticks `trail.update(dt, player.position)` alongside the particle
+  update (so ghosts keep fading after the round ends), and calls `trail.reset()`
+  on restart. Bumped version to 0.1.10.
 
 - Reworked `src/game/Collectibles.ts` around an `OrbTier` model. Three tiers,
   each with its own colour, size and value: **common** (gold, 1pt), **rare**

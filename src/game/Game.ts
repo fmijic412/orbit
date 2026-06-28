@@ -6,6 +6,7 @@ import { Particles } from "./Particles";
 import { Audio } from "./Audio";
 import { Hazards } from "./Hazards";
 import { PowerUps, POWERUP_COLOR, type PowerUpType } from "./PowerUps";
+import { Trail } from "./Trail";
 
 /** Length of a single round, in seconds. */
 const ROUND_SECONDS = 60;
@@ -55,6 +56,7 @@ export class Game {
   private readonly player = new Player();
   private readonly collectibles = new Collectibles(6);
   private readonly particles = new Particles();
+  private readonly trail = new Trail();
   private readonly hazards = new Hazards(4);
   private readonly powerups = new PowerUps();
   private readonly audio = new Audio();
@@ -113,6 +115,7 @@ export class Game {
 
     this.buildWorld();
     this.scene.add(this.player.mesh);
+    this.scene.add(this.trail.group);
     this.scene.add(this.collectibles.group);
     this.scene.add(this.hazards.group);
     this.scene.add(this.powerups.group);
@@ -216,9 +219,11 @@ export class Game {
   }
 
   private update(dt: number): void {
-    // Particles keep animating even after the round ends so in-flight bursts
-    // finish cleanly.
+    // Particles and the trail keep animating even after the round ends so any
+    // in-flight bursts and ghost segments fade out cleanly. The player can't
+    // move once frozen, so no new ghosts are dropped.
     this.particles.update(dt);
+    this.trail.update(dt, this.player.position);
 
     if (this.state !== "playing") {
       // Frozen: keep rendering but ignore input, scoring and the clock. An
@@ -433,6 +438,7 @@ export class Game {
     this.hazards.reset();
     this.powerups.reset();
     this.particles.reset();
+    this.trail.reset();
     this.endScreenEl?.classList.add("hidden");
     this.updateHud();
     this.state = "playing";
