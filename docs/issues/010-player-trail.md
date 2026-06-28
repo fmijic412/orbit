@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-06-27
 - **Labels:** polish, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-06-27)
 
 ## Motivation
 
@@ -10,9 +10,9 @@ A motion trail makes movement feel fast and fluid.
 
 ## Acceptance criteria
 
-- [ ] The player leaves a fading trail while moving.
-- [ ] The trail fades out when the player is stationary.
-- [ ] No unbounded growth of trail objects over time.
+- [x] The player leaves a fading trail while moving.
+- [x] The trail fades out when the player is stationary.
+- [x] No unbounded growth of trail objects over time.
 
 ## Technical notes
 

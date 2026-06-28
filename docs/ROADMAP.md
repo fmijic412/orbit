@@ -21,7 +21,7 @@ bottom; they get scheduled into a future sprint.
 
 - [x] Particle burst when an orb is collected
 - [x] Sound effects + background music (Web Audio)
-- [ ] Trail effect behind the player cube
+- [x] Trail effect behind the player cube
 - [x] Screen shake on hazard contact
 - [ ] Animated skybox / gradient background
 
