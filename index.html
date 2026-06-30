@@ -23,6 +23,14 @@
       <span id="pu-magnet" class="powerup hidden">&#129522; Magnet <span class="pu-time"></span></span>
     </div>
     <canvas id="game"></canvas>
+    <div id="menu-screen">
+      <div id="menu-panel">
+        <h1 id="menu-title">Orbit Runner</h1>
+        <p id="menu-tagline">Collect the glowing orbs. Dodge the hazards. Beat your best.</p>
+        <button id="start-game" type="button">Start</button>
+        <p id="menu-controls">WASD / Arrows to move &middot; M to mute &middot; Esc to pause</p>
+      </div>
+    </div>
     <div id="pause-screen" class="hidden">
       <div id="pause-panel">
         <h1>Paused</h1>
@@ -35,7 +43,10 @@
         <h1>Time's up!</h1>
         <p id="final-score">Final score: 0</p>
         <p id="new-best" class="hidden">New best!</p>
-        <button id="play-again" type="button">Play again</button>
+        <div id="end-buttons">
+          <button id="play-again" type="button">Play again</button>
+          <button id="to-menu" type="button">Main menu</button>
+        </div>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

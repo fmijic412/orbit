@@ -2,6 +2,25 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-06-29 — Main menu with Start button (#012)
+
+- The game now opens on a **main menu** instead of dropping straight into a
+  round. Added a `"menu"` game state and made it the initial state; `update()`
+  treats `menu` exactly like `paused` (an early return before any simulation,
+  scoring, audio, particle/trail or camera work), so the scene sits idle behind
+  the overlay until the player presses Start.
+- New `#menu-screen` overlay in `index.html` shows the title "Orbit Runner", a
+  one-line tagline, a prominent **Start** button, and a controls hint. It reuses
+  the existing overlay/panel styling and sits at a higher `z-index` (30) than the
+  end/pause screens so it always wins during transitions.
+- The **Start** button is wired to the existing `restart()`, which resets the
+  round and — being a user gesture — resumes/creates the `AudioContext` and
+  starts the ambience. `restart()` now also hides the menu overlay.
+- The end-of-round screen gained a secondary **Main menu** button (next to
+  **Play again**) wired to a new `toMenu()` handler that stops ambience, hides
+  the end screen and re-shows the menu, leaving the round frozen in `menu` state
+  until Start is pressed for a clean fresh round.
+
 ## 2026-06-28 — Pause (Esc) overlay (#011)
 
 - Added a `"paused"` branch to the game state. Pressing **Esc** mid-round

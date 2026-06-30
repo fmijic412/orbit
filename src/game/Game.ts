@@ -39,7 +39,23 @@ const SPEED_BOOST_SCALE = 1.6;
 /** How long a Magnet power-up lasts, in seconds. */
 const MAGNET_SECONDS = 6;
 
-type GameState = "playing" | "paused" | "ended";
+// --- Difficulty ramp ---------------------------------------------------------
+// The round is divided into fixed-length "levels". Each level beyond the first
+// adds hazards and scales their speed, so pressure builds steadily toward the
+// final seconds. All ramp values live here so the curve is easy to tune.
+
+/** Seconds of play before the difficulty steps up to the next level. */
+const LEVEL_SECONDS = 15;
+/** Hazards live at level 1 (also the floor Hazards.reset() returns to). */
+const HAZARDS_BASE = 4;
+/** Extra hazards activated per level beyond the first. */
+const HAZARDS_PER_LEVEL = 1;
+/** Hard cap on simultaneous hazards (the size of the pre-built pool). */
+const HAZARDS_MAX = 10;
+/** Added to the hazard speed multiplier for each level beyond the first. */
+const HAZARD_SPEED_PER_LEVEL = 0.15;
+
+type GameState = "menu" | "playing" | "paused" | "ended";
 
 /**
  * Top-level game controller: owns the renderer, scene, camera and the
@@ -57,7 +73,7 @@ export class Game {
   private readonly collectibles = new Collectibles(6);
   private readonly particles = new Particles();
   private readonly trail = new Trail();
-  private readonly hazards = new Hazards(4);
+  private readonly hazards = new Hazards(HAZARDS_BASE, HAZARDS_MAX);
   private readonly powerups = new PowerUps();
   private readonly audio = new Audio();
 
@@ -67,7 +83,10 @@ export class Game {
   private score = 0;
   private bestScore = 0;
   private timeLeft = ROUND_SECONDS;
-  private state: GameState = "playing";
+  /** Current difficulty level (1-based), derived from elapsed round time. */
+  private level = 1;
+  // The game opens on the main menu; nothing simulates until Start is pressed.
+  private state: GameState = "menu";
 
   /** Current combo multiplier (1 = no active combo). */
   private multiplier = 1;
@@ -90,6 +109,7 @@ export class Game {
   private readonly scoreEl = document.getElementById("score");
   private readonly bestEl = document.getElementById("best");
   private readonly timeEl = document.getElementById("time");
+  private readonly levelEl = document.getElementById("level");
   private readonly comboEl = document.getElementById("combo");
   private readonly comboMultEl = document.getElementById("combo-mult");
   private readonly comboBarFillEl = document.getElementById("combo-bar-fill");
@@ -99,6 +119,9 @@ export class Game {
   private readonly playAgainEl = document.getElementById("play-again");
   private readonly pauseScreenEl = document.getElementById("pause-screen");
   private readonly resumeEl = document.getElementById("resume");
+  private readonly menuScreenEl = document.getElementById("menu-screen");
+  private readonly startGameEl = document.getElementById("start-game");
+  private readonly toMenuEl = document.getElementById("to-menu");
   private readonly audioEl = document.getElementById("audio");
   private readonly puSpeedEl = document.getElementById("pu-speed");
   private readonly puMagnetEl = document.getElementById("pu-magnet");
@@ -125,6 +148,8 @@ export class Game {
 
     this.playAgainEl?.addEventListener("click", this.restart);
     this.resumeEl?.addEventListener("click", this.resume);
+    this.startGameEl?.addEventListener("click", this.restart);
+    this.toMenuEl?.addEventListener("click", this.toMenu);
     // Audio must be unblocked by a user gesture; the first keypress or the
     // Play again button kicks the context and starts the ambience loop.
     window.addEventListener("keydown", this.onKeyDown);
@@ -249,11 +274,12 @@ export class Game {
   }
 
   private update(dt: number): void {
-    if (this.state === "paused") {
+    if (this.state === "paused" || this.state === "menu") {
       // Fully frozen: the loop keeps re-rendering the current frame, but no
-      // simulation, scoring, audio, particles or camera motion advances, so
-      // resuming continues exactly where it left off. (dt is already clamped in
-      // the loop, so no spike accumulates across the pause.)
+      // simulation, scoring, audio, particles or camera motion advances. For
+      // "paused" this means resuming continues exactly where it left off; for
+      // "menu" the scene sits idle behind the start overlay until Start is
+      // pressed. (dt is already clamped in the loop, so no spike accumulates.)
       return;
     }
 
@@ -479,14 +505,30 @@ export class Game {
     this.trail.reset();
     this.endScreenEl?.classList.add("hidden");
     this.pauseScreenEl?.classList.add("hidden");
+    this.menuScreenEl?.classList.add("hidden");
     this.audio.setDucked(false);
     this.updateHud();
     this.state = "playing";
 
-    // Clicking "Play again" is itself a gesture, so (re)start audio here.
+    // Clicking "Start"/"Play again" is itself a user gesture, so (re)start audio
+    // here — this is where a fresh AudioContext is unblocked from the menu.
     this.ensureAudioStarted();
     void this.audio.resume();
     this.audio.startAmbience();
+  };
+
+  /**
+   * Returns to the main menu from the end-of-round screen. The round stays
+   * frozen (state "menu") behind the overlay until the player presses Start,
+   * which runs restart() for a clean fresh round.
+   */
+  private toMenu = (): void => {
+    this.state = "menu";
+    this.audio.stopAmbience();
+    this.audio.setDucked(false);
+    this.endScreenEl?.classList.add("hidden");
+    this.pauseScreenEl?.classList.add("hidden");
+    this.menuScreenEl?.classList.remove("hidden");
   };
 
   private loop = (): void => {
