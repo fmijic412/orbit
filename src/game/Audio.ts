@@ -18,7 +18,11 @@ export class Audio {
 
   /** Pre-mute master level, restored when unmuting. */
   private readonly masterLevel = 0.5;
+  /** Fraction of the master level kept while ducked (e.g. while paused). */
+  private readonly duckScale = 0.25;
   private muted = false;
+  /** True while audio is ducked (lowered, not silenced) — used when paused. */
+  private ducked = false;
 
   /** Live ambience nodes while a loop is running (null when stopped). */
   private ambience: {
@@ -60,8 +64,28 @@ export class Audio {
   /** Sets the muted state by ramping the master gain to/from silence. */
   setMuted(muted: boolean): void {
     this.muted = muted;
+    this.applyMasterGain();
+  }
+
+  /**
+   * Ducks (lowers) or restores the master volume without touching the mute
+   * state. Used to soften the mix while the game is paused; unducking returns
+   * to whatever the mute state dictates.
+   */
+  setDucked(ducked: boolean): void {
+    this.ducked = ducked;
+    this.applyMasterGain();
+  }
+
+  /**
+   * Ramps the master gain to the level implied by the current mute + duck
+   * state, so the two effects compose in one place: muted wins (silence),
+   * otherwise ducking scales the normal level down.
+   */
+  private applyMasterGain(): void {
     const now = this.ctx.currentTime;
-    const target = muted ? 0 : this.masterLevel;
+    let target = this.muted ? 0 : this.masterLevel;
+    if (this.ducked) target *= this.duckScale;
     this.master.gain.cancelScheduledValues(now);
     this.master.gain.setValueAtTime(this.master.gain.value, now);
     this.master.gain.linearRampToValueAtTime(target, now + 0.08);

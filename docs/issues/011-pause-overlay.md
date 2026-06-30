@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-06-28
 - **Labels:** ui, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-06-28)
 
 ## Motivation
 
@@ -10,10 +10,10 @@ Players need to be able to pause without losing their round.
 
 ## Acceptance criteria
 
-- [ ] Pressing Esc pauses the game and shows a "Paused" overlay with Resume.
-- [ ] While paused, the timer and all motion freeze; pressing Esc or Resume
+- [x] Pressing Esc pauses the game and shows a "Paused" overlay with Resume.
+- [x] While paused, the timer and all motion freeze; pressing Esc or Resume
       continues exactly where it left off.
-- [ ] Audio (if present) ducks or pauses while paused.
+- [x] Audio (if present) ducks or pauses while paused.
 
 ## Technical notes
 

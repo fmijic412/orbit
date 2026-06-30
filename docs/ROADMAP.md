@@ -27,8 +27,8 @@ bottom; they get scheduled into a future sprint.
 
 ## UI
 
-- [ ] Main menu with Start button
-- [ ] Pause (Esc) overlay
+- [x] Main menu with Start button
+- [x] Pause (Esc) overlay
 - [x] High-score persistence (in-memory, reset on reload)
 - [ ] Mobile touch / on-screen joystick controls
 

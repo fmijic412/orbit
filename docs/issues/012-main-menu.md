@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-06-29
 - **Labels:** ui, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-06-29)
 
 ## Motivation
 
@@ -11,10 +11,10 @@ gesture) before play begins.
 
 ## Acceptance criteria
 
-- [ ] On load, a menu overlay shows the title and a Start button (game does not
+- [x] On load, a menu overlay shows the title and a Start button (game does not
       run until Start is pressed).
-- [ ] Pressing Start begins a fresh round and resumes/creates the AudioContext.
-- [ ] The end-of-round screen can return to the menu.
+- [x] Pressing Start begins a fresh round and resumes/creates the AudioContext.
+- [x] The end-of-round screen can return to the menu.
 
 ## Technical notes
 

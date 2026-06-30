@@ -153,7 +153,9 @@ body {
   text-shadow: 0 0 12px rgba(197, 107, 255, 0.6);
 }
 
-#end-screen {
+#end-screen,
+#pause-screen,
+#menu-screen {
   position: fixed;
   inset: 0;
   display: flex;
@@ -163,8 +165,137 @@ body {
   z-index: 20;
 }
 
-#end-screen.hidden {
+#menu-screen {
+  /* The menu sits above the end screen so it always wins when both could
+     otherwise be visible during a state transition. */
+  z-index: 30;
+  background: rgba(5, 6, 10, 0.92);
+}
+
+#end-screen.hidden,
+#pause-screen.hidden,
+#menu-screen.hidden {
   display: none;
+}
+
+#menu-panel {
+  text-align: center;
+  padding: 44px 56px;
+  border-radius: 14px;
+  background: #11162a;
+  border: 1px solid #2a3550;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color: #e8ecf5;
+}
+
+#menu-title {
+  font-size: 40px;
+  margin-bottom: 14px;
+  letter-spacing: 1px;
+  color: #ffcf5c;
+}
+
+#menu-tagline {
+  font-size: 16px;
+  opacity: 0.8;
+  margin-bottom: 28px;
+}
+
+#menu-controls {
+  font-size: 13px;
+  opacity: 0.6;
+  margin-top: 22px;
+}
+
+#start-game {
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  color: #05060a;
+  background: #ffcf5c;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 40px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+#start-game:hover {
+  background: #ffd97a;
+}
+
+#start-game:active {
+  transform: scale(0.97);
+}
+
+#end-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+#to-menu {
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: #e8ecf5;
+  background: transparent;
+  border: 1px solid #2a3550;
+  border-radius: 8px;
+  padding: 12px 28px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+#to-menu:hover {
+  background: #1a2236;
+}
+
+#to-menu:active {
+  transform: scale(0.97);
+}
+
+#pause-panel {
+  text-align: center;
+  padding: 36px 48px;
+  border-radius: 14px;
+  background: #11162a;
+  border: 1px solid #2a3550;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color: #e8ecf5;
+}
+
+#pause-panel h1 {
+  font-size: 30px;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+#pause-hint {
+  font-size: 15px;
+  opacity: 0.7;
+  margin-bottom: 24px;
+}
+
+#resume {
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: #05060a;
+  background: #ffcf5c;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 28px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+#resume:hover {
+  background: #ffd97a;
+}
+
+#resume:active {
+  transform: scale(0.97);
 }
 
 #end-panel {
