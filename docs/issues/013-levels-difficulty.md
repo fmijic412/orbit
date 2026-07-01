@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-06-30
 - **Labels:** gameplay, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-06-30)
 
 ## Motivation
 
@@ -10,10 +10,10 @@ A flat difficulty gets stale; ramping pressure keeps a round tense to the end.
 
 ## Acceptance criteria
 
-- [ ] Difficulty increases as the round progresses (e.g. every 15s a new
+- [x] Difficulty increases as the round progresses (e.g. every 15s a new
       "level"): more/faster hazards, or faster orb churn.
-- [ ] The current level is shown in the HUD.
-- [ ] Ramp values are centralized constants, easy to tune.
+- [x] The current level is shown in the HUD.
+- [x] Ramp values are centralized constants, easy to tune.
 
 ## Technical notes
 

@@ -2,7 +2,7 @@
 
 - **Target date:** 2026-07-01
 - **Labels:** polish, feature
-- **Status:** open
+- **Status:** done (PR prepared 2026-07-01)
 
 ## Motivation
 
@@ -10,10 +10,10 @@ A living background adds atmosphere and depth versus a flat clear color.
 
 ## Acceptance criteria
 
-- [ ] The background is a smooth gradient (or large sky dome) rather than a
+- [x] The background is a smooth gradient (or large sky dome) rather than a
       solid color.
-- [ ] It animates subtly over time (slow hue/position shift).
-- [ ] Performance and fog/readability of gameplay are preserved.
+- [x] It animates subtly over time (slow hue/position shift).
+- [x] Performance and fog/readability of gameplay are preserved.
 
 ## Technical notes
 

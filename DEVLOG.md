@@ -2,6 +2,52 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-01 — Animated gradient skybox (#014)
+
+- Replaced the flat clear colour with a **living gradient sky dome**. New
+  `src/game/Skybox.ts` builds a large (radius 150) inward-facing
+  `SphereGeometry` rendered with a custom `THREE.ShaderMaterial`: the fragment
+  shader paints a smooth top→horizon gradient (`uTop` deep night, `uBottom`
+  dusky blue) driven by the view direction's elevation.
+- The sky **animates subtly** via a `uTime` uniform: a luminance-preserving
+  hue rotation around the grey axis (`±0.22 rad`, `HUE_SPEED = 0.08`) plus a
+  slow vertical drift of the gradient band (`DRIFT_SPEED = 0.1`,
+  `DRIFT_AMPLITUDE = 0.03`). All tuning lives as constants at the top of the
+  file. Because the shift preserves luminance, gameplay readability is
+  unaffected.
+- `Skybox.update(dt, cameraPosition)` advances `uTime` and re-centres the dome
+  on the camera each frame, so it reads as an infinite backdrop wherever the
+  player roams. It's ticked from the top of `Game.update()` — before the
+  menu/paused early-return — so the background stays alive on the menu and
+  while paused too.
+- Blending: the material opts out of fog (`fog: false`) with `depthWrite:false`
+  and `renderOrder = -1` so it draws first and gameplay geometry sits on top.
+  `THREE.Fog` colour was retuned to `0x18233d` (toward the horizon colour) so
+  distant fogged geometry dissolves into the gradient instead of a flat band;
+  the fallback `scene.background` was darkened to `0x0a0d18`.
+- Performance: one extra draw call, a single low-cost sphere with a cheap
+  fragment shader and no per-frame allocations.
+
+## 2026-06-30 — Levels / increasing difficulty over time (#013)
+
+- The round now ramps in difficulty over time. Elapsed play is divided into
+  fixed-length **levels** (`LEVEL_SECONDS = 15`): each level beyond the first
+  activates more hazards (`HAZARDS_PER_LEVEL`, capped at `HAZARDS_MAX = 10`) and
+  scales their travel speed (`HAZARD_SPEED_PER_LEVEL = 0.15` per level). All
+  ramp values are centralized constants at the top of `Game.ts`, so the curve
+  is trivial to tune.
+- `Game.ts` derives a 1-based `level` from `ROUND_SECONDS - timeLeft` each
+  frame (`updateLevel()`); on a step-up it calls `applyLevel()`, which pushes
+  the new hazard count and speed scale into the `Hazards` system. `level` is
+  reset to 1 on restart.
+- `Hazards.ts` now builds a fixed pool of `HAZARDS_MAX` cubes up front but only
+  simulates/draws/collides the first `activeCount`. New methods
+  `setActiveCount()` (re-seeds newly activated cubes so they don't pop in on the
+  player) and `setSpeedScale()` drive the ramp; `reset()` returns count and
+  speed to their level-1 floor. No geometry is allocated mid-round.
+- HUD: added a **Level** indicator (`#level`) between Time and the audio status,
+  updated every frame in `updateHud()` and styled with a warm accent.
+
 ## 2026-06-29 — Main menu with Start button (#012)
 
 - The game now opens on a **main menu** instead of dropping straight into a

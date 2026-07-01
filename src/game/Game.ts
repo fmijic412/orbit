@@ -7,6 +7,7 @@ import { Audio } from "./Audio";
 import { Hazards } from "./Hazards";
 import { PowerUps, POWERUP_COLOR, type PowerUpType } from "./PowerUps";
 import { Trail } from "./Trail";
+import { Skybox } from "./Skybox";
 
 /** Length of a single round, in seconds. */
 const ROUND_SECONDS = 60;
@@ -75,6 +76,7 @@ export class Game {
   private readonly trail = new Trail();
   private readonly hazards = new Hazards(HAZARDS_BASE, HAZARDS_MAX);
   private readonly powerups = new PowerUps();
+  private readonly skybox = new Skybox();
   private readonly audio = new Audio();
 
   /** Set once the first user gesture has unblocked + started audio. */
@@ -139,6 +141,7 @@ export class Game {
     );
 
     this.buildWorld();
+    this.scene.add(this.skybox.mesh);
     this.scene.add(this.player.mesh);
     this.scene.add(this.trail.group);
     this.scene.add(this.collectibles.group);
@@ -208,8 +211,11 @@ export class Game {
   }
 
   private buildWorld(): void {
-    this.scene.background = new THREE.Color(0x05060a);
-    this.scene.fog = new THREE.Fog(0x05060a, 30, 70);
+    // Fallback clear colour; in practice the animated Skybox dome covers it.
+    this.scene.background = new THREE.Color(0x0a0d18);
+    // Fog colour is tuned toward the skybox horizon so distant fogged geometry
+    // dissolves into the gradient rather than a mismatched flat band.
+    this.scene.fog = new THREE.Fog(0x18233d, 30, 70);
 
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(48, 48),
@@ -274,6 +280,10 @@ export class Game {
   }
 
   private update(dt: number): void {
+    // The sky animates continuously and follows the camera on every frame —
+    // even on the menu or while paused — so the background always feels alive.
+    this.skybox.update(dt, this.camera.position);
+
     if (this.state === "paused" || this.state === "menu") {
       // Fully frozen: the loop keeps re-rendering the current frame, but no
       // simulation, scoring, audio, particles or camera motion advances. For
@@ -298,6 +308,7 @@ export class Game {
 
     this.timeLeft = Math.max(0, this.timeLeft - dt);
     this.decayCombo(dt);
+    this.updateLevel();
 
     // Apply active power-up effects for this frame, then bleed their timers.
     const speedScale = this.speedTimer > 0 ? SPEED_BOOST_SCALE : 1;
@@ -381,6 +392,28 @@ export class Game {
     }
   }
 
+  /**
+   * Derives the current level from elapsed round time and, when it steps up,
+   * applies the new difficulty (more and faster hazards). Level is 1-based and
+   * advances every LEVEL_SECONDS of play.
+   */
+  private updateLevel(): void {
+    const elapsed = ROUND_SECONDS - this.timeLeft;
+    const next = Math.floor(elapsed / LEVEL_SECONDS) + 1;
+    if (next !== this.level) {
+      this.level = next;
+      this.applyLevel();
+    }
+  }
+
+  /** Scales hazard count and speed for the current level via tuning constants. */
+  private applyLevel(): void {
+    const steps = this.level - 1;
+    const count = Math.min(HAZARDS_MAX, HAZARDS_BASE + steps * HAZARDS_PER_LEVEL);
+    this.hazards.setActiveCount(count);
+    this.hazards.setSpeedScale(1 + steps * HAZARD_SPEED_PER_LEVEL);
+  }
+
   /** Counts the combo window down; resets the multiplier when it lapses. */
   private decayCombo(dt: number): void {
     if (this.comboTimer <= 0) return;
@@ -421,6 +454,7 @@ export class Game {
     if (this.timeEl) {
       this.timeEl.textContent = `Time: ${Math.ceil(this.timeLeft)}`;
     }
+    if (this.levelEl) this.levelEl.textContent = `Level: ${this.level}`;
     this.updateComboHud();
     this.updatePowerUpHud();
   }
@@ -490,6 +524,7 @@ export class Game {
   private restart = (): void => {
     this.score = 0;
     this.timeLeft = ROUND_SECONDS;
+    this.level = 1;
     this.multiplier = 1;
     this.comboTimer = 0;
     this.iFrames = 0;
@@ -499,6 +534,7 @@ export class Game {
     this.player.reset();
     this.player.mesh.visible = true;
     this.collectibles.reset();
+    // Returns hazard count/speed to their level-1 floor for a clean new round.
     this.hazards.reset();
     this.powerups.reset();
     this.particles.reset();
