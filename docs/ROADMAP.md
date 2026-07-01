@@ -15,7 +15,7 @@ bottom; they get scheduled into a future sprint.
 - [x] Moving "hazard" cubes that cost points on contact
 - [x] Power-ups (speed boost, magnet that pulls nearby orbs)
 - [x] Multiple orb types worth different points
-- [ ] Levels / increasing difficulty over time
+- [x] Levels / increasing difficulty over time
 
 ## Feel & polish
 
@@ -23,7 +23,7 @@ bottom; they get scheduled into a future sprint.
 - [x] Sound effects + background music (Web Audio)
 - [x] Trail effect behind the player cube
 - [x] Screen shake on hazard contact
-- [ ] Animated skybox / gradient background
+- [x] Animated skybox / gradient background
 
 ## UI
 

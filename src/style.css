@@ -55,6 +55,13 @@ body {
   letter-spacing: 0.5px;
 }
 
+#level {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #ff8f6b;
+}
+
 #audio {
   font-size: 14px;
   font-weight: 700;
