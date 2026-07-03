@@ -2,6 +2,38 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-02 — Mobile touch / on-screen joystick controls (#015)
+
+- Sprint 1 (issues #001–#014) is fully implemented, so today pulls the topmost
+  unchecked item from `docs/ROADMAP.md` — mobile touch controls — and files it
+  as issue #015 before building it.
+- New `src/game/Joystick.ts`: a self-contained, **analog on-screen joystick**.
+  It mounts its own DOM overlay (a floating base ring + knob) inside a
+  lower-left "active zone" and translates pointer drags into a normalized axis
+  in `[-1, 1]` per component. The joystick is **dynamic** — the base recenters
+  under wherever you first press within the zone — with a `KNOB_RADIUS = 52`px
+  travel and a small `DEAD_ZONE = 0.12` to swallow jitter. It uses Pointer
+  Events with `setPointerCapture`, so a drag keeps tracking even if the finger
+  leaves the zone, and snaps back to zero on release/cancel.
+- It **only activates on touch devices** (`matchMedia("(pointer: coarse)")` /
+  `ontouchstart` / `maxTouchPoints`). On a mouse-only desktop the zone keeps
+  `pointer-events: none`, so it never touches the cursor, buttons or keyboard
+  path. `touch-action: none` on the zone stops drags from scrolling/zooming.
+- `src/game/input.ts` gained an **analog channel**: `setAxis(x, z)` is summed
+  with the keyboard in `moveX`/`moveZ`, each clamped to `[-1, 1]`. Gameplay
+  keeps reading a single source-agnostic axis.
+- `src/game/Player.ts` now **clamps the move vector to a max length of 1**
+  instead of always normalizing. Keyboard cardinals (len 1) and diagonals
+  (len ~1.41, capped) behave exactly as before, but a partially-tilted joystick
+  (len < 1) keeps its magnitude and moves proportionally slower — true analog
+  control.
+- `src/game/Game.ts` constructs the `Joystick` and, each playing frame, calls
+  `input.setAxis(joystick.x, joystick.y)` right before `player.update`. The
+  joystick's `y` flips screen-down to the game's "up = forward" convention.
+- The HUD hint and menu controls text now mention drag-to-move. Overlay
+  z-index ordering (joystick `15` < menu/pause/end `20`+) means those screens
+  still capture touches when visible. `package.json` bumped to `0.1.15`.
+
 ## 2026-07-01 — Animated gradient skybox (#014)
 
 - Replaced the flat clear colour with a **living gradient sky dome**. New

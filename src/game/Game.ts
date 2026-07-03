@@ -8,6 +8,7 @@ import { Hazards } from "./Hazards";
 import { PowerUps, POWERUP_COLOR, type PowerUpType } from "./PowerUps";
 import { Trail } from "./Trail";
 import { Skybox } from "./Skybox";
+import { Joystick } from "./Joystick";
 
 /** Length of a single round, in seconds. */
 const ROUND_SECONDS = 60;
@@ -70,6 +71,7 @@ export class Game {
   private readonly clock = new THREE.Clock();
 
   private readonly input = new Input();
+  private readonly joystick = new Joystick();
   private readonly player = new Player();
   private readonly collectibles = new Collectibles(6);
   private readonly particles = new Particles();
@@ -314,6 +316,8 @@ export class Game {
     const speedScale = this.speedTimer > 0 ? SPEED_BOOST_SCALE : 1;
     const attract = this.magnetTimer > 0 ? this.player.position : null;
 
+    // Blend the on-screen joystick (touch) into the keyboard axis before moving.
+    this.input.setAxis(this.joystick.x, this.joystick.y);
     this.player.update(dt, this.input, speedScale);
     const picked = this.collectibles.update(dt, this.player.position, attract);
     if (picked.length > 0) {
