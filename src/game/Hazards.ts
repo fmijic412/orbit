@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { bounce1D, withinRangeXZ } from "./collision";
 
 /** How far from arena centre, on each axis, a hazard may roam. */
 const ARENA_HALF = 16;
@@ -119,20 +120,12 @@ export class Hazards {
       cube.position.x += vel.x * step;
       cube.position.z += vel.z * step;
 
-      if (cube.position.x > bound) {
-        cube.position.x = bound;
-        vel.x = -Math.abs(vel.x);
-      } else if (cube.position.x < -bound) {
-        cube.position.x = -bound;
-        vel.x = Math.abs(vel.x);
-      }
-      if (cube.position.z > bound) {
-        cube.position.z = bound;
-        vel.z = -Math.abs(vel.z);
-      } else if (cube.position.z < -bound) {
-        cube.position.z = -bound;
-        vel.z = Math.abs(vel.z);
-      }
+      const bx = bounce1D(cube.position.x, vel.x, bound);
+      cube.position.x = bx.pos;
+      vel.x = bx.vel;
+      const bz = bounce1D(cube.position.z, vel.z, bound);
+      cube.position.z = bz.pos;
+      vel.z = bz.vel;
 
       // A little tumble so they read as dangerous, not inert.
       cube.rotation.x += dt * 1.2;
@@ -147,12 +140,11 @@ export class Hazards {
    */
   collides(playerPos: THREE.Vector3, playerHalf = 0.5): boolean {
     const reach = HAZARD_HALF + playerHalf;
-    const reachSq = reach * reach;
     for (let i = 0; i < this.activeCount; i++) {
       const cube = this.cubes[i];
-      const dx = cube.position.x - playerPos.x;
-      const dz = cube.position.z - playerPos.z;
-      if (dx * dx + dz * dz < reachSq) {
+      if (
+        withinRangeXZ(cube.position.x, cube.position.z, playerPos.x, playerPos.z, reach)
+      ) {
         return true;
       }
     }

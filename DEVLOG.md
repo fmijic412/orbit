@@ -2,6 +2,38 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-05 — Basic unit tests for scoring/collision math (#016)
+
+- Sprint 1 (issues #001–#015) is fully merged, so today pulls the topmost
+  unchecked item from `docs/ROADMAP.md` — unit tests for the scoring/collision
+  math — and files it as issue #016 before building it.
+- Extracted the pure arithmetic that used to be tangled inside renderer/DOM code
+  into two small, dependency-free modules so it can be tested without a browser:
+  - `src/game/scoring.ts`: `nextMultiplier` (combo step + cap), `pointsFor`
+    (value × base × multiplier), `applyHazardPenalty` (subtract, clamp at 0) and
+    `decayCombo` (window countdown + lapse flag). The `BASE_POINTS`,
+    `COMBO_WINDOW` and `MAX_MULTIPLIER` constants now live here (previously
+    defined inline in `Game.ts`).
+  - `src/game/collision.ts`: `withinRangeXZ` (squared-distance planar overlap,
+    strict `<` to match the old inline test) and `bounce1D` (clamp to a wall +
+    flip velocity inward, pass-through when in-bounds).
+- Refactored the callers to delegate to those modules — **behaviour-preserving**,
+  no gameplay change:
+  - `Game.ts` imports the scoring helpers; `addScore` uses `nextMultiplier` +
+    `pointsFor`, the hazard hit uses `applyHazardPenalty`, and the renamed
+    `tickComboWindow` (was `decayCombo`) uses the pure `decayCombo`.
+  - `Hazards.ts` `collides()` uses `withinRangeXZ` and `update()`'s edge bounce
+    uses `bounce1D` for both axes.
+- Added **Vitest**: `vitest` devDependency, `test` / `test:watch` scripts, a
+  minimal `vitest.config.ts` (node environment, no jsdom), and two suites —
+  `src/game/scoring.test.ts` and `src/game/collision.test.ts` — covering the
+  combo curve + cap, points math, penalty clamp, window decay/lapse, the strict
+  range check and every bounce case (both walls, on-wall, in-bounds).
+- Test files are excluded from the production build via `tsconfig.json`
+  `exclude: ["src/**/*.test.ts"]`, so `tsc && vite build` output is unchanged.
+  `package.json` bumped to `0.1.16`.
+- Run the suite with `npm install` then `npm test` (or `npm run test:watch`).
+
 ## 2026-07-02 — Mobile touch / on-screen joystick controls (#015)
 
 - Sprint 1 (issues #001–#014) is fully implemented, so today pulls the topmost
