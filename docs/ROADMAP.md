@@ -30,10 +30,10 @@ bottom; they get scheduled into a future sprint.
 - [x] Main menu with Start button
 - [x] Pause (Esc) overlay
 - [x] High-score persistence (in-memory, reset on reload)
-- [ ] Mobile touch / on-screen joystick controls
+- [x] Mobile touch / on-screen joystick controls
 
 ## Tech
 
-- [ ] Basic unit tests for scoring/collision math
+- [x] Basic unit tests for scoring/collision math
 - [ ] Simple object pooling for orbs/particles
 - [ ] Settings panel (volume, sensitivity)

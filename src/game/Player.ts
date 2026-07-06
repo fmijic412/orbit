@@ -38,8 +38,16 @@ export class Player {
    */
   update(dt: number, input: Input, speedScale = 1): void {
     const dir = new THREE.Vector3(input.moveX, 0, -input.moveZ);
-    if (dir.lengthSq() > 0) {
-      dir.normalize().multiplyScalar(SPEED * speedScale * dt);
+    const len = dir.length();
+    if (len > 0) {
+      // Clamp the vector to a max length of 1 rather than always normalizing:
+      // keyboard cardinals (len 1) are unchanged, keyboard diagonals (len ~1.41)
+      // get capped so diagonal isn't faster, and a partially-tilted analog
+      // joystick (len < 1) keeps its magnitude so it moves proportionally slower.
+      if (len > 1) {
+        dir.divideScalar(len);
+      }
+      dir.multiplyScalar(SPEED * speedScale * dt);
       this.mesh.position.add(dir);
       this.mesh.position.x = THREE.MathUtils.clamp(
         this.mesh.position.x,

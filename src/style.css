@@ -359,3 +359,59 @@ body {
 #play-again:active {
   transform: scale(0.97);
 }
+
+/* --- On-screen joystick (touch devices only) ----------------------------- */
+
+/*
+ * The active zone covers the lower-left of the screen. It sits above the
+ * canvas/HUD (z-index 15) but below the menu/pause/end overlays (z-index 20+)
+ * so those still capture touches when shown. It is inert by default and only
+ * intercepts pointer events on touch devices (the `.enabled` class, set from
+ * JS). `touch-action: none` stops drags from scrolling/zooming the page.
+ */
+#joystick-zone {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 55vw;
+  height: 60vh;
+  z-index: 15;
+  pointer-events: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#joystick-zone.enabled {
+  pointer-events: auto;
+}
+
+.joy-base {
+  position: fixed;
+  width: 120px;
+  height: 120px;
+  margin: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(127, 224, 200, 0.5);
+  background: rgba(17, 22, 42, 0.35);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.joy-base.hidden {
+  display: none;
+}
+
+.joy-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(127, 224, 200, 0.85);
+  box-shadow: 0 0 16px rgba(127, 224, 200, 0.6);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
