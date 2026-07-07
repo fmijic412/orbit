@@ -2,6 +2,36 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-07 — Simple object pooling for orbs/particles (#017)
+
+- Sprint 1 (issues #001–#016) is fully merged, so today pulls the topmost
+  unchecked item from `docs/ROADMAP.md` — object pooling for orbs/particles —
+  and files it as issue #017 before building it.
+- Added a tiny, reusable, three.js-free pooling primitive `src/game/Pool.ts`:
+  `Pool<T>` preallocates `size` items via a factory and hands them back out
+  round-robin (`acquire()`, wrapping to overwrite the oldest once full) plus
+  indexed/iterable access (`get(i)`, `items`, `size`) for callers that fill a
+  per-frame buffer. No `three`/DOM dependency, so it stays trivially reusable.
+- Refactored `Particles` onto `Pool<Particle>`: the constructor now builds the
+  pool via a factory and `burst()` calls `pool.acquire()`, replacing the
+  hand-rolled `cursor`/private `acquire()`. `update()`/`reset()` iterate
+  `pool.items` directly (no per-frame closure). Burst/fade behaviour is
+  identical.
+- Made `Collectibles.update()` allocation-free: it previously built a fresh
+  `OrbPickup[]` and a `position.clone()` per pickup every frame. It now reuses a
+  persistent `picked` buffer (`length = 0` each frame) backed by a `Pool` of
+  mutable `PickupSlot` objects (one per orb, so it never overflows); each pickup
+  fills a pooled slot in place via `position.copy()`. Callers in `Game.update()`
+  consume the buffer the same frame, so recycling slots is safe — scoring, the
+  collect-particle bursts and the magnet power-up are unchanged.
+- Behaviour-preserving: no gameplay change; this only removes steady per-frame
+  garbage from the collection/particle hot paths. `package.json` bumped to
+  `0.1.17`.
+- Tooling note: the sandbox left a stray `src/game/__scratch_test.ts` (an empty
+  `export {};` module) that it lacked permission to delete — safe to remove
+  before committing.
+- Run locally with `npm install` then `npm run dev` at http://127.0.0.1:5173.
+
 ## 2026-07-05 — Basic unit tests for scoring/collision math (#016)
 
 - Sprint 1 (issues #001–#015) is fully merged, so today pulls the topmost
