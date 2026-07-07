@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Pool } from "./Pool";
 
 /** Total particles kept alive in the pool (shared across all bursts). */
 const POOL_SIZE = 160;
@@ -29,14 +30,13 @@ interface Particle {
  */
 export class Particles {
   readonly group = new THREE.Group();
-  private readonly pool: Particle[] = [];
-  /** Round-robin cursor so reused particles spread across the pool. */
-  private cursor = 0;
+  /** Fixed pool of particles; `acquire()` recycles the oldest once full. */
+  private readonly pool: Pool<Particle>;
 
   constructor() {
     // One shared geometry; per-particle materials so each can fade/tint alone.
     const geometry = new THREE.IcosahedronGeometry(0.12, 0);
-    for (let i = 0; i < POOL_SIZE; i++) {
+    this.pool = new Pool<Particle>(POOL_SIZE, () => {
       const material = new THREE.MeshBasicMaterial({
         color: 0xffffff,
         transparent: true,
@@ -46,21 +46,21 @@ export class Particles {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.visible = false;
       this.group.add(mesh);
-      this.pool.push({
+      return {
         mesh,
         material,
         velocity: new THREE.Vector3(),
         life: 0,
         maxLife: 1,
         active: false,
-      });
-    }
+      };
+    });
   }
 
   /** Emits a burst of particles at `position`, tinted with `color`. */
   burst(position: THREE.Vector3, color: THREE.ColorRepresentation): void {
     for (let i = 0; i < PARTICLES_PER_BURST; i++) {
-      const p = this.acquire();
+      const p = this.pool.acquire();
 
       // Spray outward in a random horizontal direction with an upward kick.
       const angle = Math.random() * Math.PI * 2;
@@ -87,7 +87,7 @@ export class Particles {
 
   /** Advances every live particle; recycles those whose life has run out. */
   update(dt: number): void {
-    for (const p of this.pool) {
+    for (const p of this.pool.items) {
       if (!p.active) continue;
 
       p.life -= dt;
@@ -113,17 +113,10 @@ export class Particles {
 
   /** Deactivates and hides every particle (used on round restart). */
   reset(): void {
-    for (const p of this.pool) {
+    for (const p of this.pool.items) {
       p.active = false;
       p.mesh.visible = false;
       p.material.opacity = 0;
     }
-  }
-
-  /** Grabs the next pool slot, overwriting the oldest if all are busy. */
-  private acquire(): Particle {
-    const p = this.pool[this.cursor];
-    this.cursor = (this.cursor + 1) % this.pool.length;
-    return p;
   }
 }

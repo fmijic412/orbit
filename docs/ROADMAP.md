@@ -35,5 +35,5 @@ bottom; they get scheduled into a future sprint.
 ## Tech
 
 - [x] Basic unit tests for scoring/collision math
-- [ ] Simple object pooling for orbs/particles
+- [x] Simple object pooling for orbs/particles
 - [ ] Settings panel (volume, sensitivity)

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Pool } from "./Pool";
 
 const ARENA_HALF = 16;
 const PICKUP_RADIUS = 1.1;
@@ -49,6 +50,18 @@ export interface OrbPickup {
   readonly color: number;
 }
 
+/**
+ * Mutable backing object for a pooled pickup. Structurally an `OrbPickup`, but
+ * its fields are reassigned each time a slot is reused so `update()` can report
+ * pickups without allocating. Callers (Game.update) read it within the same
+ * frame, so recycling the same slots frame-to-frame is safe.
+ */
+interface PickupSlot {
+  position: THREE.Vector3;
+  value: number;
+  color: number;
+}
+
 /** Runtime state for one orb: its mesh, material and current tier + lifetime. */
 interface Orb {
   readonly mesh: THREE.Mesh;
@@ -61,14 +74,26 @@ interface Orb {
 /**
  * Manages the glowing orbs the player collects. Each orb belongs to a tier
  * (common / rare / bonus) with its own colour, size and point value. When one
- * is picked up — or when a time-limited orb's lifetime lapses — it re-rolls a
+ * is picked up - or when a time-limited orb's lifetime lapses - it re-rolls a
  * new tier and respawns at a random location.
  */
 export class Collectibles {
   readonly group = new THREE.Group();
   private readonly orbs: Orb[] = [];
+  /**
+   * Pool of pickup slots, one per orb (at most every orb can be grabbed in a
+   * single frame), plus the reused result buffer handed back from `update()`.
+   * Together they keep the collection hot path allocation-free.
+   */
+  private readonly pickupPool: Pool<PickupSlot>;
+  private readonly picked: OrbPickup[] = [];
 
   constructor(count: number) {
+    this.pickupPool = new Pool<PickupSlot>(count, () => ({
+      position: new THREE.Vector3(),
+      value: 0,
+      color: 0,
+    }));
     const geometry = new THREE.IcosahedronGeometry(0.5, 1);
     for (let i = 0; i < count; i++) {
       const material = new THREE.MeshStandardMaterial({
@@ -122,6 +147,10 @@ export class Collectibles {
    * re-roll). The caller sums the values for scoring and uses each position +
    * colour for the collect-particle burst.
    *
+   * The returned array is a buffer reused every frame and backed by a pool of
+   * pickup slots, so a full round of collecting allocates nothing. Callers must
+   * consume it within the same frame (Game.update does).
+   *
    * When `attract` is provided (an active Magnet power-up's target, usually the
    * player), orbs within `MAGNET_RADIUS` are steered toward it each frame so
    * they drift into reach.
@@ -131,7 +160,9 @@ export class Collectibles {
     playerPos: THREE.Vector3,
     attract: THREE.Vector3 | null = null,
   ): OrbPickup[] {
-    const picked: OrbPickup[] = [];
+    // Reuse the same result buffer and pooled slots each frame - no allocation.
+    const picked = this.picked;
+    picked.length = 0;
     for (const orb of this.orbs) {
       const mesh = orb.mesh;
       mesh.rotation.y += dt * 2;
@@ -162,11 +193,13 @@ export class Collectibles {
       }
 
       if (mesh.position.distanceTo(playerPos) < PICKUP_RADIUS) {
-        picked.push({
-          position: mesh.position.clone(),
-          value: orb.tier.value,
-          color: orb.tier.color,
-        });
+        // Grab the next pooled slot (one per orb, so this never overflows) and
+        // fill it in place rather than allocating a fresh pickup + clone.
+        const slot = this.pickupPool.get(picked.length);
+        slot.position.copy(mesh.position);
+        slot.value = orb.tier.value;
+        slot.color = orb.tier.color;
+        picked.push(slot);
         this.roll(orb);
       }
     }
