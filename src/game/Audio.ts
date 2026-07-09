@@ -17,7 +17,7 @@ export class Audio {
   private readonly master: GainNode;
 
   /** Pre-mute master level, restored when unmuting. */
-  private readonly masterLevel = 0.5;
+  private masterLevel = 0.5;
   /** Fraction of the master level kept while ducked (e.g. while paused). */
   private readonly duckScale = 0.25;
   private muted = false;
@@ -53,6 +53,17 @@ export class Audio {
   /** Whether audio is currently muted. */
   get isMuted(): boolean {
     return this.muted;
+  }
+
+  /** Get the current master volume level (0-1). */
+  getVolume(): number {
+    return this.masterLevel / 0.5; // Normalize from internal 0-0.5 to 0-1
+  }
+
+  /** Set the master volume level (0-1) and apply immediately. */
+  setVolume(volume: number): void {
+    this.masterLevel = Math.max(0, Math.min(1, volume)) * 0.5;
+    this.applyMasterGain();
   }
 
   /** Toggles mute and returns the new muted state. */

@@ -9,6 +9,7 @@ import { PowerUps, POWERUP_COLOR, type PowerUpType } from "./PowerUps";
 import { Trail } from "./Trail";
 import { Skybox } from "./Skybox";
 import { Joystick } from "./Joystick";
+import { Settings } from "./Settings";
 import {
   COMBO_WINDOW,
   applyHazardPenalty,
@@ -80,6 +81,7 @@ export class Game {
   private readonly powerups = new PowerUps();
   private readonly skybox = new Skybox();
   private readonly audio = new Audio();
+  private readonly settings = new Settings();
 
   /** Set once the first user gesture has unblocked + started audio. */
   private audioStarted = false;
@@ -125,7 +127,16 @@ export class Game {
   private readonly resumeEl = document.getElementById("resume");
   private readonly menuScreenEl = document.getElementById("menu-screen");
   private readonly startGameEl = document.getElementById("start-game");
+  private readonly settingsGameEl = document.getElementById("settings-game");
   private readonly toMenuEl = document.getElementById("to-menu");
+  private readonly settingsScreenEl = document.getElementById("settings-screen");
+  private readonly closeSettingsEl = document.getElementById("close-settings");
+  private readonly volumeSliderEl = document.getElementById(
+    "volume-slider",
+  ) as HTMLInputElement;
+  private readonly sensitivitySliderEl = document.getElementById(
+    "sensitivity-slider",
+  ) as HTMLInputElement;
   private readonly audioEl = document.getElementById("audio");
   private readonly puSpeedEl = document.getElementById("pu-speed");
   private readonly puMagnetEl = document.getElementById("pu-magnet");
@@ -154,12 +165,17 @@ export class Game {
     this.playAgainEl?.addEventListener("click", this.restart);
     this.resumeEl?.addEventListener("click", this.resume);
     this.startGameEl?.addEventListener("click", this.restart);
+    this.settingsGameEl?.addEventListener("click", this.showSettings);
+    this.closeSettingsEl?.addEventListener("click", this.hideSettings);
     this.toMenuEl?.addEventListener("click", this.toMenu);
+    this.volumeSliderEl?.addEventListener("input", this.onVolumeChange);
+    this.sensitivitySliderEl?.addEventListener("input", this.onSensitivityChange);
     // Audio must be unblocked by a user gesture; the first keypress or the
     // Play again button kicks the context and starts the ambience loop.
     window.addEventListener("keydown", this.onKeyDown);
     this.updateHud();
     this.updateAudioHud();
+    this.applySettings();
 
     this.onResize();
     window.addEventListener("resize", this.onResize);
@@ -318,7 +334,9 @@ export class Game {
 
     // Blend the on-screen joystick (touch) into the keyboard axis before moving.
     this.input.setAxis(this.joystick.x, this.joystick.y);
-    this.player.update(dt, this.input, speedScale);
+    // Apply sensitivity multiplier alongside power-up speed boost.
+    const sensitivityScale = this.settings.getSensitivity();
+    this.player.update(dt, this.input, speedScale * sensitivityScale);
     const picked = this.collectibles.update(dt, this.player.position, attract);
     if (picked.length > 0) {
       // Burst each orb in its own tier colour and sum the points it's worth so
@@ -565,7 +583,69 @@ export class Game {
     this.endScreenEl?.classList.add("hidden");
     this.pauseScreenEl?.classList.add("hidden");
     this.menuScreenEl?.classList.remove("hidden");
+    this.settingsScreenEl?.classList.add("hidden");
   };
+
+  /** Shows the settings overlay and hides the menu. */
+  private showSettings = (): void => {
+    this.menuScreenEl?.classList.add("hidden");
+    this.settingsScreenEl?.classList.remove("hidden");
+    this.updateSettingsUI();
+  };
+
+  /** Hides the settings overlay and shows the menu. */
+  private hideSettings = (): void => {
+    this.settingsScreenEl?.classList.add("hidden");
+    this.menuScreenEl?.classList.remove("hidden");
+  };
+
+  /** Updates the slider UI to reflect current settings. */
+  private updateSettingsUI(): void {
+    if (this.volumeSliderEl) {
+      const volume = this.settings.getVolume();
+      this.volumeSliderEl.value = (volume * 100).toString();
+      const volumeValueEl = document.getElementById("volume-value");
+      if (volumeValueEl) {
+        volumeValueEl.textContent = `${Math.round(volume * 100)}%`;
+      }
+    }
+    if (this.sensitivitySliderEl) {
+      const sensitivity = this.settings.getSensitivity();
+      this.sensitivitySliderEl.value = sensitivity.toString();
+      const sensitivityValueEl = document.getElementById("sensitivity-value");
+      if (sensitivityValueEl) {
+        sensitivityValueEl.textContent = `${sensitivity.toFixed(1)}×`;
+      }
+    }
+  }
+
+  /** Handles volume slider changes. */
+  private onVolumeChange = (e: Event): void => {
+    const input = e.target as HTMLInputElement;
+    const volume = parseFloat(input.value) / 100;
+    this.settings.setVolume(volume);
+    this.audio.setVolume(volume);
+    const valueEl = document.getElementById("volume-value");
+    if (valueEl) {
+      valueEl.textContent = `${Math.round(volume * 100)}%`;
+    }
+  };
+
+  /** Handles sensitivity slider changes. */
+  private onSensitivityChange = (e: Event): void => {
+    const input = e.target as HTMLInputElement;
+    const sensitivity = parseFloat(input.value);
+    this.settings.setSensitivity(sensitivity);
+    const valueEl = document.getElementById("sensitivity-value");
+    if (valueEl) {
+      valueEl.textContent = `${sensitivity.toFixed(1)}×`;
+    }
+  };
+
+  /** Applies persisted settings to the game systems. */
+  private applySettings(): void {
+    this.audio.setVolume(this.settings.getVolume());
+  }
 
   private loop = (): void => {
     const dt = Math.min(this.clock.getDelta(), 0.05);

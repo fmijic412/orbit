@@ -28,8 +28,29 @@
       <div id="menu-panel">
         <h1 id="menu-title">Orbit Runner</h1>
         <p id="menu-tagline">Collect the glowing orbs. Dodge the hazards. Beat your best.</p>
-        <button id="start-game" type="button">Start</button>
+        <div id="menu-buttons">
+          <button id="start-game" type="button">Start</button>
+          <button id="settings-game" type="button">Settings</button>
+        </div>
         <p id="menu-controls">WASD / Arrows on desktop &middot; drag the joystick on touch &middot; M to mute &middot; Esc to pause</p>
+      </div>
+    </div>
+    <div id="settings-screen" class="hidden">
+      <div id="settings-panel">
+        <h1>Settings</h1>
+        <div id="settings-content">
+          <div class="setting-item">
+            <label for="volume-slider">Volume</label>
+            <input type="range" id="volume-slider" min="0" max="100" value="100" />
+            <span id="volume-value">100%</span>
+          </div>
+          <div class="setting-item">
+            <label for="sensitivity-slider">Sensitivity</label>
+            <input type="range" id="sensitivity-slider" min="0.5" max="2" step="0.1" value="1" />
+            <span id="sensitivity-value">1.0×</span>
+          </div>
+        </div>
+        <button id="close-settings" type="button">Back</button>
       </div>
     </div>
     <div id="pause-screen" class="hidden">
