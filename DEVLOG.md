@@ -2,6 +2,18 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-07 — Settings panel: volume + sensitivity (#018)
+
+- After Sprint 1 and the pooling refactor, the final unchecked item in `docs/ROADMAP.md` — a Settings panel for customizing volume and input sensitivity — is implemented and filed as issue #018.
+- New `src/game/Settings.ts`: a tiny system managing volume (0–1) and sensitivity (0.5–2.0) with `localStorage` persistence. Getters and setters clamp and validate all values; `load()` / `save()` handle browser storage (graceful no-op if unavailable).
+- Updated `src/game/Audio.ts`: changed `masterLevel` from a constant to a field so `setVolume(fraction)` can scale it. New `getVolume()` / `setVolume()` methods normalize the internal gain (0–0.5) to a user-facing 0–1 range.
+- Updated `src/game/Game.ts`: constructs `Settings`, loads/applies defaults on init via `applySettings()`. Player move speed now scales by `settings.getSensitivity()` each frame, so the slider controls responsiveness live. Wired Settings button in the menu to show/hide the overlay, and connected the sliders to update both Settings and Audio.
+- New `#settings-screen` overlay in `index.html` with a **Volume** slider (0–100%, displays %) and **Sensitivity** slider (0.5–2.0×, displays multiplier), plus a **Back** button to return to the menu. Menu panel gains a **Settings** button next to Start.
+- Styling in `src/style.css`: `#settings-panel` matches the menu/pause aesthetic (centered, bordered, semi-transparent). Range sliders are styled with gold thumbs and glow; labels and display values keep the UI readable.
+- Settings applied immediately on slider input; persisted to `localStorage` on change. On page load, saved values restore automatically — users' preferences carry across sessions until reload.
+- Behaviour-preserving: no gameplay change. The default sensitivity (1.0×) and volume (100%) match the current baseline so existing rounds play identically. `package.json` bumped to `0.1.18`.
+- Run locally with `npm install` then `npm run dev` at http://127.0.0.1:5173.
+
 ## 2026-07-07 — Simple object pooling for orbs/particles (#017)
 
 - Sprint 1 (issues #001–#016) is fully merged, so today pulls the topmost
