@@ -24,6 +24,19 @@ pre-written issue in `docs/issues/`. The task implements the issue whose
 | 013 | Jun 30 (Tue)| Levels / increasing difficulty over time  | Gameplay  |
 | 014 | Jul 1  (Wed)| Animated gradient skybox                   | Polish    |
 
+## Sprint 2 — Post-backlog (Jul 2 – , 2026)
+
+| #   | Date (2026) | Feature                                   | Theme     |
+| --- | ----------- | ----------------------------------------- | --------- |
+| 015 | Jul 2  (Thu)| Mobile touch / on-screen joystick         | UI        |
+| 016 | Jul 5  (Sun)| Unit tests for scoring/collision math     | Tech      |
+| 017 | Jul 7  (Tue)| Object pooling for orbs/particles         | Tech      |
+| 018 | Jul 8  (Wed)| Settings panel (volume, sensitivity)      | UI        |
+| 019 | Jul 9  (Thu)| Persistent top-5 leaderboard              | UI        |
+
+With #019 the original `docs/ROADMAP.md` backlog is fully checked off. Future
+runs add a new idea to the roadmap, file it as the next issue, and build it.
+
 ## After Sprint 1 (backlog, not yet dated)
 
 Pulled from `docs/ROADMAP.md` once Sprint 1 is merged:

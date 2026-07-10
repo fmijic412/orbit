@@ -463,6 +463,71 @@ body {
   display: none;
 }
 
+#leaderboard {
+  margin: 4px auto 24px;
+  padding-top: 16px;
+  border-top: 1px solid #2a3550;
+  min-width: 260px;
+  text-align: left;
+}
+
+#leaderboard h2 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#leaderboard-list {
+  list-style: none;
+}
+
+#leaderboard-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 15px;
+  opacity: 0.8;
+}
+
+/* The row for the round that just finished. */
+#leaderboard-list li.current {
+  background: rgba(255, 207, 92, 0.12);
+  color: #ffcf5c;
+  opacity: 1;
+}
+
+.lb-rank {
+  width: 20px;
+  opacity: 0.6;
+}
+
+.lb-score {
+  font-weight: 700;
+  flex: 1;
+}
+
+.lb-meta {
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+#leaderboard-empty {
+  font-size: 14px;
+  opacity: 0.55;
+  text-align: center;
+  padding: 6px 0;
+}
+
+#leaderboard-empty.hidden {
+  display: none;
+}
+
 #play-again {
   font: inherit;
   font-size: 16px;

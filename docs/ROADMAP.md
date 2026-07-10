@@ -31,6 +31,7 @@ bottom; they get scheduled into a future sprint.
 - [x] Pause (Esc) overlay
 - [x] High-score persistence (in-memory, reset on reload)
 - [x] Mobile touch / on-screen joystick controls
+- [x] Persistent top-5 leaderboard on the end screen
 
 ## Tech
 

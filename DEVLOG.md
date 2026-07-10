@@ -2,6 +2,46 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-09 — Persistent top-5 leaderboard (#019)
+
+- Every issue (#001–#018) is done and every item in `docs/ROADMAP.md` was
+  checked, so the dated plan is exhausted. Today opens the next batch: the first
+  new backlog idea — a persistent top-5 leaderboard on the end screen — is added
+  to the roadmap's UI section and filed as issue #019 before being built.
+- New `src/game/leaderboard.ts`: the pure, `three`- and DOM-free ranking layer,
+  following the `scoring.ts` / `collision.ts` precedent. `insertScore()` merges a
+  fresh entry, sorts descending, caps at `LEADERBOARD_SIZE` (5) and returns the
+  new table plus the entry's 1-based rank (0 if it missed the cut) — without
+  mutating its input. Because the newcomer is appended *before* a stable sort,
+  ties favour the incumbent: matching the current best does not steal rank 1.
+  `parseEntries()` validates a stored JSON payload row by row (bad JSON, a
+  non-array, or rows with missing/negative/non-numeric fields are dropped rather
+  than thrown), and `formatEntryDate()` renders `2026-07-09` as `Jul 9`.
+- New `src/game/HighScores.ts`: a thin `localStorage` persistence class shaped
+  like `Settings.ts` — load in the constructor, save on every write, and treat an
+  unavailable or corrupt store as "no scores yet". `submit(score, level)` returns
+  the round's rank and ignores scoreless rounds, so the table never fills with
+  zeroes. `best()` exposes the top score.
+- New `src/game/leaderboard.test.ts`: 15 vitest cases over sorting, the size cap,
+  tie behaviour, rank 0 on a miss, input immutability, JSON validation and date
+  formatting.
+- Updated `src/game/Game.ts`: constructs `HighScores` and seeds `bestScore` from
+  it, so the HUD's "Best: N" now survives a page reload (previously in-memory
+  only, per #002). `endRound()` compares against the old best *before* submitting
+  — otherwise the round just recorded would tie itself — then renders the table
+  through a new `renderLeaderboard(rank)` that builds the rows and marks the row
+  of the round that just finished.
+- New `#leaderboard` block inside `#end-panel` in `index.html` (a `Top 5`
+  heading, an `<ol>`, and an empty state for a first-time player), styled in
+  `src/style.css` to match the existing panel aesthetic: dim rows, a gold
+  highlight on the current round, and `L<level> · <Mon D>` metadata per entry.
+- No gameplay change — scoring, collision and the difficulty ramp are untouched.
+  `package.json` bumped to `0.1.19`.
+- Tooling note: `src/game/__scratch_test.ts` (an empty `export {};` module left
+  by an earlier sandbox run) still can't be deleted from this environment — it is
+  harmless but safe to remove before committing.
+- Run locally with `npm install` then `npm run dev` at http://127.0.0.1:5173.
+
 ## 2026-07-07 — Settings panel: volume + sensitivity (#018)
 
 - After Sprint 1 and the pooling refactor, the final unchecked item in `docs/ROADMAP.md` — a Settings panel for customizing volume and input sensitivity — is implemented and filed as issue #018.
