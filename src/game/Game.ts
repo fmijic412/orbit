@@ -10,6 +10,8 @@ import { Trail } from "./Trail";
 import { Skybox } from "./Skybox";
 import { Joystick } from "./Joystick";
 import { Settings } from "./Settings";
+import { HighScores } from "./HighScores";
+import { formatEntryDate } from "./leaderboard";
 import {
   COMBO_WINDOW,
   applyHazardPenalty,
@@ -82,12 +84,14 @@ export class Game {
   private readonly skybox = new Skybox();
   private readonly audio = new Audio();
   private readonly settings = new Settings();
+  private readonly highScores = new HighScores();
 
   /** Set once the first user gesture has unblocked + started audio. */
   private audioStarted = false;
 
   private score = 0;
-  private bestScore = 0;
+  /** Seeded from the persisted leaderboard so "Best" survives a reload. */
+  private bestScore = this.highScores.best();
   private timeLeft = ROUND_SECONDS;
   /** Current difficulty level (1-based), derived from elapsed round time. */
   private level = 1;
@@ -122,6 +126,12 @@ export class Game {
   private readonly endScreenEl = document.getElementById("end-screen");
   private readonly finalScoreEl = document.getElementById("final-score");
   private readonly newBestEl = document.getElementById("new-best");
+  private readonly leaderboardListEl = document.getElementById(
+    "leaderboard-list",
+  );
+  private readonly leaderboardEmptyEl = document.getElementById(
+    "leaderboard-empty",
+  );
   private readonly playAgainEl = document.getElementById("play-again");
   private readonly pauseScreenEl = document.getElementById("pause-screen");
   private readonly resumeEl = document.getElementById("resume");
@@ -525,7 +535,11 @@ export class Game {
     this.speedTimer = 0;
     this.magnetTimer = 0;
 
+    // Compare against the old best *before* submitting, otherwise the round we
+    // just recorded would always tie itself.
     const isNewBest = this.score > this.bestScore;
+    // Scoreless rounds are not recorded, so submit() returns rank 0 for them.
+    const rank = this.highScores.submit(this.score, this.level);
     if (isNewBest) {
       this.bestScore = this.score;
     }
@@ -534,8 +548,43 @@ export class Game {
       this.finalScoreEl.textContent = `Final score: ${this.score}`;
     }
     this.newBestEl?.classList.toggle("hidden", !isNewBest);
+    this.renderLeaderboard(rank);
     this.endScreenEl?.classList.remove("hidden");
     this.updateHud();
+  }
+
+  /**
+   * Rebuilds the top-5 table on the end screen. `highlightRank` is the 1-based
+   * rank of the round that just finished (0 when it didn't place), which marks
+   * that row so the player can spot their result at a glance.
+   */
+  private renderLeaderboard(highlightRank: number): void {
+    const entries = this.highScores.list;
+    this.leaderboardEmptyEl?.classList.toggle("hidden", entries.length > 0);
+
+    const list = this.leaderboardListEl;
+    if (!list) return;
+    list.replaceChildren();
+
+    entries.forEach((entry, i) => {
+      const row = document.createElement("li");
+      row.classList.toggle("current", i + 1 === highlightRank);
+
+      const rank = document.createElement("span");
+      rank.className = "lb-rank";
+      rank.textContent = `${i + 1}.`;
+
+      const score = document.createElement("span");
+      score.className = "lb-score";
+      score.textContent = `${entry.score}`;
+
+      const meta = document.createElement("span");
+      meta.className = "lb-meta";
+      meta.textContent = `L${entry.level} · ${formatEntryDate(entry.date)}`;
+
+      row.append(rank, score, meta);
+      list.append(row);
+    });
   }
 
   /** Resets score, timer and orbs and starts a fresh round. */
