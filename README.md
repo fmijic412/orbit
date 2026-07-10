@@ -34,15 +34,3 @@ src/game/input.ts   keyboard input state
 docs/ROADMAP.md     backlog of features the daily task draws from
 DEVLOG.md           dated log of what was added each day
 ```
-
-## How the daily updates work
-
-Each day a scheduled Cowork task:
-
-1. Reads `DEVLOG.md` and `docs/ROADMAP.md` to decide the next feature.
-2. Writes an issue note under `docs/issues/`.
-3. Creates a feature branch and implements the feature.
-4. Commits locally and writes a PR description under `docs/prs/`.
-
-Because the task's environment cannot reach GitHub or npm, **you** push the
-branch, open the PR from the prepared description, review it, and merge.
