@@ -508,6 +508,18 @@ body {
   display: none;
 }
 
+#flawless-bonus {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #5cffb0;
+  margin-bottom: 20px;
+}
+
+#flawless-bonus.hidden {
+  display: none;
+}
+
 #leaderboard {
   margin: 4px auto 24px;
   padding-top: 16px;

@@ -13,6 +13,7 @@ import { Settings } from "./Settings";
 import { HighScores } from "./HighScores";
 import { formatEntryDate } from "./leaderboard";
 import { COUNTDOWN_SECONDS, countdownLabel, tickCountdown } from "./countdown";
+import { flawlessBonus } from "./bonus";
 import {
   COMBO_WINDOW,
   applyHazardPenalty,
@@ -33,6 +34,9 @@ const HAZARD_PENALTY = 5;
 const HAZARD_BURST_COLOR = 0xff3b3b;
 /** Seconds of post-hit invulnerability so one bump is not a chain of hits. */
 const IFRAMES_SECONDS = 1.2;
+
+/** Colour of the celebratory burst played when a flawless round is rewarded. */
+const FLAWLESS_BURST_COLOR = 0x5cffb0;
 
 /** Trauma added by a hazard hit (0..1). Kept subtle to avoid discomfort. */
 const HAZARD_SHAKE = 0.6;
@@ -114,6 +118,8 @@ export class Game {
 
   /** Remaining invulnerability time after a hazard hit (0 = vulnerable). */
   private iFrames = 0;
+  /** Number of hazard hits taken this round; 0 at round end == a flawless run. */
+  private hitCount = 0;
 
   /** Remaining Speed power-up time, in seconds (0 = inactive). */
   private speedTimer = 0;
@@ -135,6 +141,7 @@ export class Game {
   private readonly endScreenEl = document.getElementById("end-screen");
   private readonly finalScoreEl = document.getElementById("final-score");
   private readonly newBestEl = document.getElementById("new-best");
+  private readonly flawlessBonusEl = document.getElementById("flawless-bonus");
   private readonly leaderboardListEl = document.getElementById(
     "leaderboard-list",
   );
@@ -440,9 +447,10 @@ export class Game {
 
     if (this.hazards.collides(this.player.position)) {
       this.score = applyHazardPenalty(this.score, HAZARD_PENALTY);
-      // A hit breaks any active combo.
+      // A hit breaks any active combo and forfeits the flawless-round bonus.
       this.multiplier = 1;
       this.comboTimer = 0;
+      this.hitCount += 1;
       this.iFrames = IFRAMES_SECONDS;
       this.particles.burst(this.player.position, HAZARD_BURST_COLOR);
       this.audio.hit();
@@ -587,6 +595,19 @@ export class Game {
     this.speedTimer = 0;
     this.magnetTimer = 0;
 
+    // Reward a flawless round (no hazard hits) *before* deciding best/rank, so
+    // the bonus counts toward "New best!" and the leaderboard entry. Idle,
+    // scoreless rounds don't qualify (see flawlessBonus).
+    const bonus = flawlessBonus(this.hitCount, this.level, this.score);
+    if (bonus > 0) {
+      this.score += bonus;
+      this.particles.burst(this.player.position, FLAWLESS_BURST_COLOR);
+    }
+    if (this.flawlessBonusEl) {
+      this.flawlessBonusEl.textContent = `Flawless round! +${bonus}`;
+    }
+    this.flawlessBonusEl?.classList.toggle("hidden", bonus <= 0);
+
     // Compare against the old best *before* submitting, otherwise the round we
     // just recorded would always tie itself.
     const isNewBest = this.score > this.bestScore;
@@ -647,6 +668,7 @@ export class Game {
     this.multiplier = 1;
     this.comboTimer = 0;
     this.iFrames = 0;
+    this.hitCount = 0;
     this.trauma = 0;
     this.speedTimer = 0;
     this.magnetTimer = 0;
