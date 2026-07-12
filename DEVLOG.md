@@ -2,6 +2,37 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-10 — Round-start countdown "3 · 2 · 1 · Go!" (#020)
+
+- Every dated issue (#001–#019) is done and every item in `docs/ROADMAP.md` was
+  already checked, so the plan is exhausted. Per the plan's "future runs add a
+  new idea, file it as the next issue, and build it" rule, today adds a new
+  polish idea — a round-start countdown — to the roadmap, files it as issue #020,
+  and builds it.
+- New `src/game/countdown.ts`: the pure, `three`- and DOM-free timing layer,
+  following the `scoring.ts` / `leaderboard.ts` precedent. `COUNTDOWN_SECONDS`
+  (3), `tickCountdown(remaining, dt)` → `{ remaining, done }` (clamps at 0 and
+  keeps reporting `done` so a late frame can't revive the countdown), and
+  `countdownLabel(remaining)` mapping remaining seconds to `"3"`/`"2"`/`"1"` and
+  `0` to `"Go!"`.
+- New `src/game/countdown.test.ts`: 8 vitest cases over the down-count, the
+  zero-crossing `done` flag, overshoot clamping, the finished no-op, and the
+  label mapping through a full 3 → 2 → 1 → Go! run.
+- Updated `src/game/Game.ts`: adds a `"countdown"` `GameState`. `restart()` now
+  enters `"countdown"` (seeding `countdown` + a short `goHold`) instead of going
+  straight to `"playing"`, so Start / Play again open on the countdown. `update()`
+  gains a countdown branch that keeps the skybox animating and eases the camera
+  in behind the player while the round clock, hazards, orbs, power-ups and
+  scoring stay frozen; when the timer reaches "Go!" a brief `GO_HOLD_SECONDS`
+  (0.45s) keeps the word readable before `beginPlay()` unfreezes into live play.
+  A new `updateCountdownHud()` re-pops the label only when the digit changes.
+- Updated `index.html` / `src/style.css`: a non-blocking `#countdown-screen`
+  overlay with a large gold `#countdown-label`, a per-tick `countdown-pop`
+  keyframe, and `pointer-events: none` so the touch joystick underneath stays
+  usable; z-index 19 sits it above the HUD but below the pause/menu overlays.
+- No scoring, collision or difficulty change — only *when* a round starts moves.
+  `package.json` bumped to `0.1.20`.
+
 ## 2026-07-09 — Persistent top-5 leaderboard (#019)
 
 - Every issue (#001–#018) is done and every item in `docs/ROADMAP.md` was

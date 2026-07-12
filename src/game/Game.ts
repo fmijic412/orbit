@@ -12,6 +12,7 @@ import { Joystick } from "./Joystick";
 import { Settings } from "./Settings";
 import { HighScores } from "./HighScores";
 import { formatEntryDate } from "./leaderboard";
+import { COUNTDOWN_SECONDS, countdownLabel, tickCountdown } from "./countdown";
 import {
   COMBO_WINDOW,
   applyHazardPenalty,
@@ -22,6 +23,9 @@ import {
 
 /** Length of a single round, in seconds. */
 const ROUND_SECONDS = 60;
+
+/** How long "Go!" lingers after the countdown before live play begins. */
+const GO_HOLD_SECONDS = 0.45;
 
 /** Points deducted when the player touches a hazard cube. */
 const HAZARD_PENALTY = 5;
@@ -60,7 +64,7 @@ const HAZARDS_MAX = 10;
 /** Added to the hazard speed multiplier for each level beyond the first. */
 const HAZARD_SPEED_PER_LEVEL = 0.15;
 
-type GameState = "menu" | "playing" | "paused" | "ended";
+type GameState = "menu" | "countdown" | "playing" | "paused" | "ended";
 
 /**
  * Top-level game controller: owns the renderer, scene, camera and the
@@ -97,6 +101,11 @@ export class Game {
   private level = 1;
   // The game opens on the main menu; nothing simulates until Start is pressed.
   private state: GameState = "menu";
+
+  /** Remaining pre-round countdown time, in seconds (only used in "countdown"). */
+  private countdown = 0;
+  /** Remaining "Go!" hold after the countdown hits zero, before play begins. */
+  private goHold = 0;
 
   /** Current combo multiplier (1 = no active combo). */
   private multiplier = 1;
@@ -135,6 +144,8 @@ export class Game {
   private readonly playAgainEl = document.getElementById("play-again");
   private readonly pauseScreenEl = document.getElementById("pause-screen");
   private readonly resumeEl = document.getElementById("resume");
+  private readonly countdownScreenEl = document.getElementById("countdown-screen");
+  private readonly countdownLabelEl = document.getElementById("countdown-label");
   private readonly menuScreenEl = document.getElementById("menu-screen");
   private readonly startGameEl = document.getElementById("start-game");
   private readonly settingsGameEl = document.getElementById("settings-game");
@@ -321,6 +332,25 @@ export class Game {
       return;
     }
 
+    if (this.state === "countdown") {
+      // Pre-round hold: the simulation is frozen (clock, hazards, orbs and
+      // scoring are all untouched) but the skybox animates and the camera eases
+      // in behind the player so the scene stays alive while the player gets set.
+      const { remaining, done } = tickCountdown(this.countdown, dt);
+      this.countdown = remaining;
+      this.updateCountdownHud();
+      this.updateCamera(dt);
+      if (done) {
+        // The countdown has reached "Go!"; hold that frame briefly (still
+        // frozen) so it's readable, then hand off to live play.
+        this.goHold = Math.max(0, this.goHold - dt);
+        if (this.goHold <= 0) {
+          this.beginPlay();
+        }
+      }
+      return;
+    }
+
     // Particles and the trail keep animating even after the round ends so any
     // in-flight bursts and ghost segments fade out cleanly. The player can't
     // move once frozen, so no new ghosts are dropped.
@@ -476,6 +506,28 @@ export class Game {
     }
   }
 
+  /** Refreshes the big centered "3 · 2 · 1 · Go!" label during the countdown. */
+  private updateCountdownHud(): void {
+    if (!this.countdownLabelEl) return;
+    const label = countdownLabel(this.countdown);
+    // Re-trigger the per-tick pop animation only when the label actually
+    // changes, so the number doesn't restart its animation every frame.
+    if (this.countdownLabelEl.textContent !== label) {
+      this.countdownLabelEl.textContent = label;
+      this.countdownLabelEl.classList.remove("pop");
+      // Force a reflow so removing + re-adding the class restarts the animation.
+      void this.countdownLabelEl.offsetWidth;
+      this.countdownLabelEl.classList.add("pop");
+    }
+  }
+
+  /** Transitions from the pre-round countdown into live play. */
+  private beginPlay(): void {
+    this.countdown = 0;
+    this.state = "playing";
+    this.countdownScreenEl?.classList.add("hidden");
+  }
+
   private updateHud(): void {
     if (this.scoreEl) this.scoreEl.textContent = `Score: ${this.score}`;
     if (this.bestEl) this.bestEl.textContent = `Best: ${this.bestScore}`;
@@ -611,7 +663,14 @@ export class Game {
     this.menuScreenEl?.classList.add("hidden");
     this.audio.setDucked(false);
     this.updateHud();
-    this.state = "playing";
+
+    // Open on a short "3 · 2 · 1 · Go!" hold before live play begins. The round
+    // clock, hazards and scoring stay frozen until the countdown reaches "Go!".
+    this.countdown = COUNTDOWN_SECONDS;
+    this.goHold = GO_HOLD_SECONDS;
+    this.updateCountdownHud();
+    this.countdownScreenEl?.classList.remove("hidden");
+    this.state = "countdown";
 
     // Clicking "Start"/"Play again" is itself a user gesture, so (re)start audio
     // here — this is where a fresh AudioContext is unblocked from the menu.
@@ -631,6 +690,7 @@ export class Game {
     this.audio.setDucked(false);
     this.endScreenEl?.classList.add("hidden");
     this.pauseScreenEl?.classList.add("hidden");
+    this.countdownScreenEl?.classList.add("hidden");
     this.menuScreenEl?.classList.remove("hidden");
     this.settingsScreenEl?.classList.add("hidden");
   };
