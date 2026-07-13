@@ -2,6 +2,34 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-11 — Flawless round bonus (#021)
+
+- Every dated issue (#001–#020) is done and every item in `docs/ROADMAP.md` was
+  already checked, so the plan is exhausted. Per the plan's "future runs add a
+  new idea, file it as the next issue, and build it" rule, today adds a new
+  gameplay idea — a flawless (no-hit) round bonus — to the roadmap, files it as
+  issue #021, and builds it.
+- New `src/game/bonus.ts`: the pure, `three`- and DOM-free scoring layer,
+  following the `scoring.ts` / `countdown.ts` precedent. `FLAWLESS_BASE` (25),
+  `FLAWLESS_PER_LEVEL` (10), and `flawlessBonus(hits, level, score)` → the bonus
+  for a clean round: `0` when the player took a hit (`hits > 0`) or never scored
+  (`score <= 0`, so idle rounds can't farm it), otherwise `base + (floor(level)
+  − 1) * perLevel` so surviving deeper into the ramp untouched pays more.
+- New `src/game/bonus.test.ts`: 6 vitest cases over the base award, the per-level
+  scaling, hit forfeiture, the scoreless-round guard, fractional/floored levels,
+  and custom base/per-level overrides.
+- Updated `src/game/Game.ts`: tracks a per-round `hitCount` (reset in `restart()`,
+  incremented in `updateHazards()` on each fresh hazard contact). `endRound()`
+  now computes `flawlessBonus(...)` and adds it to the score *before* deciding
+  `isNewBest` and submitting to the leaderboard, so the bonus counts toward both;
+  a positive bonus shows the `#flawless-bonus` end-screen line and fires a mint
+  celebratory particle burst.
+- Updated `index.html` / `src/style.css`: a `#flawless-bonus` end-screen line
+  (hidden unless earned), styled in mint (`#5cffb0`) to read as a reward,
+  distinct from the gold "New best!".
+- No change to base scoring, collision or the difficulty ramp — only a new
+  end-of-round reward. `package.json` bumped to `0.1.21`.
+
 ## 2026-07-10 — Round-start countdown "3 · 2 · 1 · Go!" (#020)
 
 - Every dated issue (#001–#019) is done and every item in `docs/ROADMAP.md` was

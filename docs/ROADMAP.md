@@ -16,6 +16,7 @@ bottom; they get scheduled into a future sprint.
 - [x] Power-ups (speed boost, magnet that pulls nearby orbs)
 - [x] Multiple orb types worth different points
 - [x] Levels / increasing difficulty over time
+- [x] Flawless round bonus (no-hit end-of-round reward, scales with level)
 
 ## Feel & polish
 
