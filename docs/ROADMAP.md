@@ -24,6 +24,7 @@ bottom; they get scheduled into a future sprint.
 - [x] Trail effect behind the player cube
 - [x] Screen shake on hazard contact
 - [x] Animated skybox / gradient background
+- [x] Round-start "3 · 2 · 1 · Go!" countdown
 
 ## UI
 
