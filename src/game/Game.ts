@@ -14,6 +14,7 @@ import { HighScores } from "./HighScores";
 import { formatEntryDate } from "./leaderboard";
 import { COUNTDOWN_SECONDS, countdownLabel, tickCountdown } from "./countdown";
 import { flawlessBonus } from "./bonus";
+import { GRADE_COLOR, gradeFor } from "./grade";
 import {
   COMBO_WINDOW,
   applyHazardPenalty,
@@ -142,6 +143,7 @@ export class Game {
   private readonly finalScoreEl = document.getElementById("final-score");
   private readonly newBestEl = document.getElementById("new-best");
   private readonly flawlessBonusEl = document.getElementById("flawless-bonus");
+  private readonly gradeEl = document.getElementById("grade");
   private readonly leaderboardListEl = document.getElementById(
     "leaderboard-list",
   );
@@ -619,6 +621,18 @@ export class Game {
 
     if (this.finalScoreEl) {
       this.finalScoreEl.textContent = `Final score: ${this.score}`;
+    }
+    // Grade the run from its final score (after any flawless bonus) so the
+    // player gets a single at-a-glance verdict, tinted by tier.
+    if (this.gradeEl) {
+      const grade = gradeFor(this.score);
+      this.gradeEl.textContent = grade;
+      this.gradeEl.style.color = GRADE_COLOR[grade];
+      // Restart the pop animation so it replays on every round, not just the
+      // first render — remove the class, force a reflow, then re-add it.
+      this.gradeEl.classList.remove("pop");
+      void this.gradeEl.offsetWidth;
+      this.gradeEl.classList.add("pop");
     }
     this.newBestEl?.classList.toggle("hidden", !isNewBest);
     this.renderLeaderboard(rank);
