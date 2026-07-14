@@ -15,6 +15,7 @@ import { formatEntryDate } from "./leaderboard";
 import { COUNTDOWN_SECONDS, countdownLabel, tickCountdown } from "./countdown";
 import { flawlessBonus } from "./bonus";
 import { GRADE_COLOR, gradeFor } from "./grade";
+import { nextGradeProgress } from "./nextGrade";
 import {
   COMBO_WINDOW,
   applyHazardPenalty,
@@ -144,6 +145,7 @@ export class Game {
   private readonly newBestEl = document.getElementById("new-best");
   private readonly flawlessBonusEl = document.getElementById("flawless-bonus");
   private readonly gradeEl = document.getElementById("grade");
+  private readonly nextGradeEl = document.getElementById("next-grade");
   private readonly leaderboardListEl = document.getElementById(
     "leaderboard-list",
   );
@@ -633,6 +635,15 @@ export class Game {
       this.gradeEl.classList.remove("pop");
       void this.gradeEl.offsetWidth;
       this.gradeEl.classList.add("pop");
+    }
+    // Show how close the run came to the next letter up, giving the player a
+    // concrete target to chase on the next round ("47 to A"). At the top tier
+    // there's nothing above, so celebrate instead.
+    if (this.nextGradeEl) {
+      const progress = nextGradeProgress(this.score);
+      this.nextGradeEl.textContent = progress.atTop
+        ? "Top grade — can't do better!"
+        : `${progress.pointsToNext} to ${progress.nextGrade}`;
     }
     this.newBestEl?.classList.toggle("hidden", !isNewBest);
     this.renderLeaderboard(rank);

@@ -35,6 +35,7 @@ bottom; they get scheduled into a future sprint.
 - [x] Mobile touch / on-screen joystick controls
 - [x] Persistent top-5 leaderboard on the end screen
 - [x] End-of-round performance grade (S/A/B/C/D) on the end screen
+- [x] "Points to next grade" hint under the end-screen grade
 
 ## Tech
 

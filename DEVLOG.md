@@ -2,6 +2,39 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-14 — "Points to next grade" hint (#023)
+
+- Every dated issue (#001–#022) is done and every item in `docs/ROADMAP.md` was
+  already checked, so the plan is exhausted. Per the plan's "future runs add a
+  new idea, file it as the next issue, and build it" rule, today adds a new UI
+  idea — a "points to the next grade" hint under the end-screen letter grade —
+  to the roadmap, files it as issue #023, and builds it. (Two runs landed on
+  2026-07-14 because #022's target was also today; this run fell back to the
+  next open work, i.e. a new issue, exactly as designed.)
+- New `src/game/nextGrade.ts`: the pure, `three`- and DOM-free layer that sits
+  on top of `grade.ts`'s tiers, following the `grade.ts` / `scoring.ts` /
+  `bonus.ts` / `countdown.ts` / `leaderboard.ts` precedent. Exports a
+  `NextGradeProgress` interface (`atTop`, `nextGrade: Grade | null`,
+  `pointsToNext`) and `nextGradeProgress(score, tiers = GRADE_TIERS)`: it finds
+  the earned tier (first the score reaches, highest-first), then returns the
+  tier just above it and the `Math.max(0, Math.ceil(next.minScore - score))`
+  gap. At the S tier there's nothing above, so it returns `atTop: true`,
+  `nextGrade: null`, `pointsToNext: 0`. Reuses `GRADE_TIERS` so the hint can
+  never disagree with the grade shown.
+- New `src/game/nextGrade.test.ts`: 8 vitest cases over the top tier, a
+  well-above-S score, mid-tier gaps, the one-below-threshold boundary, the
+  scoreless floor, negative scores, fractional-threshold rounding, and custom
+  tiers.
+- Updated `src/game/Game.ts`: imports `nextGradeProgress`; in `endRound()`,
+  after the grade is written, it computes the progress from the same final
+  score and writes `"<points> to <grade>"` (or "Top grade — can't do better!"
+  at S) into the new `#next-grade` element.
+- Updated `index.html` / `src/style.css`: a small `#next-grade` line on the end
+  panel, directly under `#grade` and above the final score.
+- No change to scoring, collision, the grade thresholds, the difficulty ramp or
+  the flawless bonus — the hint is a pure read of the already-final score.
+  `package.json` bumped to `0.1.23`.
+
 ## 2026-07-14 — End-of-round performance grade (#022)
 
 - Every dated issue (#001–#021) is done and every item in `docs/ROADMAP.md` was
