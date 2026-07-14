@@ -2,6 +2,34 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-14 — End-of-round performance grade (#022)
+
+- Every dated issue (#001–#021) is done and every item in `docs/ROADMAP.md` was
+  already checked, so the plan is exhausted. Per the plan's "future runs add a
+  new idea, file it as the next issue, and build it" rule, today adds a new UI
+  idea — an end-of-round letter grade — to the roadmap, files it as issue #022,
+  and builds it.
+- New `src/game/grade.ts`: the pure, `three`- and DOM-free grading layer,
+  following the `scoring.ts` / `bonus.ts` / `countdown.ts` / `leaderboard.ts`
+  precedent. Exports a `Grade` union (`S`/`A`/`B`/`C`/`D`), `GRADE_TIERS`
+  (grade + `minScore`, highest first: S≥600, A≥400, B≥250, C≥120, D≥0), a
+  `GRADE_COLOR` map, and `gradeFor(score, tiers = GRADE_TIERS)` — walks the
+  tiers high→low and returns the first the score reaches, falling to the lowest
+  tier for sub-floor/negative scores so the result is always a valid grade.
+- New `src/game/grade.test.ts`: 7 vitest cases over the top tier, exact
+  thresholds, just-below-threshold boundaries, the scoreless floor, negative
+  scores, custom tiers, and that every tier has a hex colour.
+- Updated `src/game/Game.ts`: imports `gradeFor` / `GRADE_COLOR`; in
+  `endRound()`, after the final score (incl. any flawless bonus) is set, it
+  grades the run, writes the letter into the new `#grade` element, tints it via
+  `GRADE_COLOR`, and restarts the pop animation with the same remove-class /
+  reflow / add-class trick used for the countdown label.
+- Updated `index.html` / `src/style.css`: a large `#grade` element on the end
+  panel above the final score, with a `#grade.pop` keyframe pop-in.
+- No change to scoring, collision, the difficulty ramp or the flawless bonus —
+  the grade is a pure read of the already-final score. `package.json` bumped to
+  `0.1.22`.
+
 ## 2026-07-11 — Flawless round bonus (#021)
 
 - Every dated issue (#001–#020) is done and every item in `docs/ROADMAP.md` was
