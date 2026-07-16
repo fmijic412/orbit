@@ -524,6 +524,24 @@ body {
   margin: 0 0 14px;
 }
 
+#defense {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.9;
+  margin: 0 0 6px;
+}
+
+#momentum {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.9;
+  margin: 0 0 14px;
+}
+
 #final-score {
   font-size: 20px;
   opacity: 0.85;
