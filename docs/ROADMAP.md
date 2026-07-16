@@ -36,6 +36,8 @@ bottom; they get scheduled into a future sprint.
 - [x] Persistent top-5 leaderboard on the end screen
 - [x] End-of-round performance grade (S/A/B/C/D) on the end screen
 - [x] "Points to next grade" hint under the end-screen grade
+- [x] End-of-round defense rating from hazard hits taken
+- [x] End-of-round momentum rating from the peak combo multiplier reached
 
 ## Tech
 

@@ -16,6 +16,8 @@ import { COUNTDOWN_SECONDS, countdownLabel, tickCountdown } from "./countdown";
 import { flawlessBonus } from "./bonus";
 import { GRADE_COLOR, gradeFor } from "./grade";
 import { nextGradeProgress } from "./nextGrade";
+import { DEFENSE_COLOR, defenseFor, hitsSummary } from "./defense";
+import { MOMENTUM_COLOR, momentumFor, peakSummary } from "./momentum";
 import {
   COMBO_WINDOW,
   applyHazardPenalty,
@@ -115,6 +117,8 @@ export class Game {
 
   /** Current combo multiplier (1 = no active combo). */
   private multiplier = 1;
+  /** Highest combo multiplier reached this round; drives the momentum rating. */
+  private peakMultiplier = 1;
   /** Time remaining, in seconds, before the combo lapses. */
   private comboTimer = 0;
 
@@ -146,6 +150,8 @@ export class Game {
   private readonly flawlessBonusEl = document.getElementById("flawless-bonus");
   private readonly gradeEl = document.getElementById("grade");
   private readonly nextGradeEl = document.getElementById("next-grade");
+  private readonly defenseEl = document.getElementById("defense");
+  private readonly momentumEl = document.getElementById("momentum");
   private readonly leaderboardListEl = document.getElementById(
     "leaderboard-list",
   );
@@ -429,6 +435,7 @@ export class Game {
     // A pickup while the window is still open chains the combo and bumps the
     // multiplier; otherwise this pickup starts a fresh combo at x1.
     this.multiplier = nextMultiplier(this.multiplier, this.comboTimer > 0);
+    this.peakMultiplier = Math.max(this.peakMultiplier, this.multiplier);
     this.score += pointsFor(value, this.multiplier);
     this.comboTimer = COMBO_WINDOW;
   }
@@ -645,6 +652,24 @@ export class Game {
         ? "Top grade — can't do better!"
         : `${progress.pointsToNext} to ${progress.nextGrade}`;
     }
+    // Rate the run's defense from the hazard hits it took, giving the player a
+    // read on their evasion separate from raw score ("Untouchable · no hazard
+    // hits"). Tinted by tier, gold for a clean run down to red for a reckless
+    // one.
+    if (this.defenseEl) {
+      const rating = defenseFor(this.hitCount);
+      this.defenseEl.textContent = `${rating} · ${hitsSummary(this.hitCount)}`;
+      this.defenseEl.style.color = DEFENSE_COLOR[rating];
+    }
+    // Rate the run's momentum from the highest combo multiplier it reached,
+    // rewarding long chains separately from raw score ("Unstoppable · peak x8
+    // combo"). Tinted by tier, gold for a monster chain down to grey for a
+    // round that never chained.
+    if (this.momentumEl) {
+      const rating = momentumFor(this.peakMultiplier);
+      this.momentumEl.textContent = `${rating} · ${peakSummary(this.peakMultiplier)}`;
+      this.momentumEl.style.color = MOMENTUM_COLOR[rating];
+    }
     this.newBestEl?.classList.toggle("hidden", !isNewBest);
     this.renderLeaderboard(rank);
     this.endScreenEl?.classList.remove("hidden");
@@ -691,6 +716,7 @@ export class Game {
     this.timeLeft = ROUND_SECONDS;
     this.level = 1;
     this.multiplier = 1;
+    this.peakMultiplier = 1;
     this.comboTimer = 0;
     this.iFrames = 0;
     this.hitCount = 0;

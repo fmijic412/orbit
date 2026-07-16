@@ -2,6 +2,70 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-16 — End-of-round momentum rating (#025)
+
+- Every dated issue (#001–#024) is done and every item in `docs/ROADMAP.md` was
+  already checked, so the plan is exhausted. Per the plan's "future runs add a
+  new idea, file it as the next issue, and build it" rule, today adds a new UI
+  idea — a momentum rating on the end screen, derived from the highest combo
+  multiplier reached during the round — to the roadmap, files it as issue #025,
+  and builds it. It rounds out the end-screen read-outs: grade (score), defense
+  (hazard hits), and now momentum (combo chaining).
+- New `src/game/momentum.ts`: the pure, `three`- and DOM-free layer following the
+  `grade.ts` / `defense.ts` / `nextGrade.ts` / `scoring.ts` / `bonus.ts` /
+  `countdown.ts` / `leaderboard.ts` precedent. Exports a `MomentumRating` type
+  (`Unstoppable` · `Blazing` · `Warming Up` · `Cold`), a `MomentumTier`
+  interface, `MOMENTUM_TIERS` (best-first, worst tier `minMultiplier: 1`), a
+  `MOMENTUM_COLOR` map, `momentumFor(peak, tiers = MOMENTUM_TIERS)` (clamps the
+  peak at the multiplier floor of 1 and floors fractions, returns the first tier
+  whose `minMultiplier` the peak reaches — the `minMultiplier: 1` catch-all
+  guarantees a valid result), and `peakSummary(peak)` for the no-combo vs.
+  "peak xN combo" wording.
+- New `src/game/momentum.test.ts`: 9 vitest cases over the top rating, the tier
+  step-downs and boundaries, a never-chained round, sub-1 and fractional peaks,
+  custom tiers, and the `peakSummary` no-combo/named/clamp/floor wording.
+- Updated `src/game/Game.ts`: imports `momentumFor` / `peakSummary` /
+  `MOMENTUM_COLOR`, adds a `peakMultiplier` round field (seeded at 1, bumped in
+  `addScore()` right after the multiplier steps up, reset to 1 in `restart()`
+  alongside `multiplier`), caches the `#momentum` element, and in `endRound()`,
+  after the defense line, writes `"<rating> · <peakSummary>"` (tinted by tier)
+  into `#momentum`.
+- Updated `index.html` / `src/style.css`: a small `#momentum` line on the end
+  panel, directly under `#defense` and above the final score.
+- No change to scoring, the combo math, collision, the grade thresholds, the
+  difficulty ramp, the flawless bonus or the defense rating — the momentum
+  rating is a pure read of the peak multiplier the round already produces.
+  `package.json` bumped to `0.1.25`.
+
+## 2026-07-15 — End-of-round defense rating (#024)
+
+- Every dated issue (#001–#023) is done and every item in `docs/ROADMAP.md` was
+  already checked, so the plan is exhausted. Per the plan's "future runs add a
+  new idea, file it as the next issue, and build it" rule, today adds a new UI
+  idea — a defense rating on the end screen, derived from the hazard hits taken —
+  to the roadmap, files it as issue #024, and builds it.
+- New `src/game/defense.ts`: the pure, `three`- and DOM-free layer following the
+  `grade.ts` / `nextGrade.ts` / `scoring.ts` / `bonus.ts` / `countdown.ts` /
+  `leaderboard.ts` precedent. Exports a `DefenseRating` type (`Untouchable` ·
+  `Nimble` · `Guarded` · `Reckless`), a `DefenseTier` interface, `DEFENSE_TIERS`
+  (best-first, worst tier `maxHits: Infinity`), a `DEFENSE_COLOR` map,
+  `defenseFor(hits, tiers = DEFENSE_TIERS)` (clamps hits at 0, returns the first
+  tier whose `maxHits` the count doesn't exceed — the `Infinity` catch-all
+  guarantees a valid result), and `hitsSummary(hits)` for singular/plural
+  wording.
+- New `src/game/defense.test.ts`: 9 vitest cases over the hit-free top rating,
+  the tier step-downs and boundaries, a huge hit count, a negative count, custom
+  tiers, and the `hitsSummary` singular/plural/clamp/floor wording.
+- Updated `src/game/Game.ts`: imports `defenseFor` / `hitsSummary` /
+  `DEFENSE_COLOR` and caches the `#defense` element; in `endRound()`, after the
+  next-grade line, it reads the round's `hitCount` and writes
+  `"<rating> · <hitsSummary>"` (tinted by tier) into `#defense`.
+- Updated `index.html` / `src/style.css`: a small `#defense` line on the end
+  panel, directly under `#next-grade` and above the final score.
+- No change to scoring, collision, the grade thresholds, the difficulty ramp or
+  the flawless bonus — the rating is a pure read of the already-tracked hit
+  count. `package.json` bumped to `0.1.24`.
+
 ## 2026-07-14 — "Points to next grade" hint (#023)
 
 - Every dated issue (#001–#022) is done and every item in `docs/ROADMAP.md` was
