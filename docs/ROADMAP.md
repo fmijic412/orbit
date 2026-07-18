@@ -38,6 +38,7 @@ bottom; they get scheduled into a future sprint.
 - [x] "Points to next grade" hint under the end-screen grade
 - [x] End-of-round defense rating from hazard hits taken
 - [x] End-of-round momentum rating from the peak combo multiplier reached
+- [x] End-of-round haul rating from the total orbs collected
 
 ## Tech
 

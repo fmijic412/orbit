@@ -18,6 +18,7 @@ import { GRADE_COLOR, gradeFor } from "./grade";
 import { nextGradeProgress } from "./nextGrade";
 import { DEFENSE_COLOR, defenseFor, hitsSummary } from "./defense";
 import { MOMENTUM_COLOR, momentumFor, peakSummary } from "./momentum";
+import { HAUL_COLOR, haulFor, orbsSummary } from "./haul";
 import {
   COMBO_WINDOW,
   applyHazardPenalty,
@@ -126,6 +127,8 @@ export class Game {
   private iFrames = 0;
   /** Number of hazard hits taken this round; 0 at round end == a flawless run. */
   private hitCount = 0;
+  /** Total orbs collected this round; drives the end-of-round haul rating. */
+  private orbsCollected = 0;
 
   /** Remaining Speed power-up time, in seconds (0 = inactive). */
   private speedTimer = 0;
@@ -152,6 +155,7 @@ export class Game {
   private readonly nextGradeEl = document.getElementById("next-grade");
   private readonly defenseEl = document.getElementById("defense");
   private readonly momentumEl = document.getElementById("momentum");
+  private readonly haulEl = document.getElementById("haul");
   private readonly leaderboardListEl = document.getElementById(
     "leaderboard-list",
   );
@@ -403,6 +407,8 @@ export class Game {
         this.particles.burst(orb.position, orb.color);
         value += orb.value;
       }
+      // Count orbs (not points) toward the end-of-round haul rating.
+      this.orbsCollected += picked.length;
       this.addScore(value);
       // Pitch the pickup blip up with the combo so chains feel like a scale.
       this.audio.pickup(this.multiplier - 1);
@@ -670,6 +676,15 @@ export class Game {
       this.momentumEl.textContent = `${rating} · ${peakSummary(this.peakMultiplier)}`;
       this.momentumEl.style.color = MOMENTUM_COLOR[rating];
     }
+    // Rate the run's haul from the total orbs it collected, giving raw
+    // collection its own read separate from score ("Voracious · 48 orbs
+    // collected"). Tinted by tier, gold for a monster haul down to grey for a
+    // round that collected nothing.
+    if (this.haulEl) {
+      const rating = haulFor(this.orbsCollected);
+      this.haulEl.textContent = `${rating} · ${orbsSummary(this.orbsCollected)}`;
+      this.haulEl.style.color = HAUL_COLOR[rating];
+    }
     this.newBestEl?.classList.toggle("hidden", !isNewBest);
     this.renderLeaderboard(rank);
     this.endScreenEl?.classList.remove("hidden");
@@ -720,6 +735,7 @@ export class Game {
     this.comboTimer = 0;
     this.iFrames = 0;
     this.hitCount = 0;
+    this.orbsCollected = 0;
     this.trauma = 0;
     this.speedTimer = 0;
     this.magnetTimer = 0;

@@ -1,7 +1,7 @@
 {
   "name": "orbit-runner",
   "private": true,
-  "version": "0.1.25",
+  "version": "0.1.26",
   "type": "module",
   "description": "A web-based 3D game built with Three.js, Vite, and TypeScript.",
   "scripts": {

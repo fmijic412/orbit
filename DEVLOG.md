@@ -2,6 +2,44 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-17 — End-of-round haul rating (#026)
+
+- Every dated issue (#001–#025) is done and every item in `docs/ROADMAP.md` was
+  already checked, so the plan is exhausted. Per the plan's "future runs add a
+  new idea, file it as the next issue, and build it" rule, today adds a new UI
+  idea — a haul rating on the end screen, derived from the total number of orbs
+  collected during the round — to the roadmap, files it as issue #026, and builds
+  it. It's the fourth end-screen read-out, alongside grade (score), defense
+  (hazard hits) and momentum (peak combo): score already folds in the multiplier
+  and orb tiers, so nothing yet reflects raw collection volume — a big score can
+  be a modest haul chained well or a large haul at low multipliers.
+- New `src/game/haul.ts`: the pure, `three`- and DOM-free layer following the
+  `grade.ts` / `defense.ts` / `momentum.ts` / `nextGrade.ts` / `scoring.ts` /
+  `bonus.ts` / `countdown.ts` / `leaderboard.ts` precedent. Exports a `HaulRating`
+  type (`Voracious` · `Bountiful` · `Steady` · `Sparse`), a `HaulTier` interface,
+  `HAUL_TIERS` (best-first, worst tier `minOrbs: 0`), a `HAUL_COLOR` map,
+  `haulFor(orbs, tiers = HAUL_TIERS)` (clamps the count at 0 and floors it,
+  returns the first tier whose `minOrbs` the count reaches — the `minOrbs: 0`
+  catch-all guarantees a valid result), and `orbsSummary(orbs)` for the
+  no-orb/singular/plural wording.
+- New `src/game/haul.test.ts`: 9 vitest cases over the top rating, the tier
+  step-downs and boundaries, a no-orb round, negative and fractional counts,
+  custom tiers, and the `orbsSummary` none/singular/plural/clamp/floor wording.
+- Updated `src/game/Game.ts`: imports `haulFor` / `orbsSummary` / `HAUL_COLOR`,
+  adds an `orbsCollected` round field (seeded at 0, bumped by `picked.length` in
+  the existing pickup block of `update()`, reset to 0 in `restart()` alongside
+  `hitCount`), caches the `#haul` element, and in `endRound()`, after the
+  momentum line, writes `"<rating> · <orbsSummary>"` (tinted by tier) into
+  `#haul`.
+- Updated `index.html` / `src/style.css`: a small `#haul` line on the end panel,
+  directly under `#momentum` and above the final score; `#momentum`'s bottom
+  margin tightened to 6px so the two ratings group and `#haul` keeps the 14px gap
+  before the score.
+- No change to scoring, the combo math, collision, the grade thresholds, the
+  difficulty ramp, the flawless bonus, the defense or the momentum rating — the
+  haul rating is a pure read of a count the round already produces.
+  `package.json` bumped to `0.1.26`.
+
 ## 2026-07-16 — End-of-round momentum rating (#025)
 
 - Every dated issue (#001–#024) is done and every item in `docs/ROADMAP.md` was
