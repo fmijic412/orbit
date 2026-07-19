@@ -19,6 +19,7 @@ import { nextGradeProgress } from "./nextGrade";
 import { DEFENSE_COLOR, defenseFor, hitsSummary } from "./defense";
 import { MOMENTUM_COLOR, momentumFor, peakSummary } from "./momentum";
 import { HAUL_COLOR, haulFor, orbsSummary } from "./haul";
+import { UTILITY_COLOR, utilityFor, powerupsSummary } from "./utility";
 import {
   COMBO_WINDOW,
   applyHazardPenalty,
@@ -129,6 +130,8 @@ export class Game {
   private hitCount = 0;
   /** Total orbs collected this round; drives the end-of-round haul rating. */
   private orbsCollected = 0;
+  /** Power-ups collected this round; drives the end-of-round utility rating. */
+  private powerupsCollected = 0;
 
   /** Remaining Speed power-up time, in seconds (0 = inactive). */
   private speedTimer = 0;
@@ -156,6 +159,7 @@ export class Game {
   private readonly defenseEl = document.getElementById("defense");
   private readonly momentumEl = document.getElementById("momentum");
   private readonly haulEl = document.getElementById("haul");
+  private readonly utilityEl = document.getElementById("utility");
   private readonly leaderboardListEl = document.getElementById(
     "leaderboard-list",
   );
@@ -416,6 +420,8 @@ export class Game {
 
     const grabbed = this.powerups.update(dt, this.player.position);
     if (grabbed) {
+      // Count power-ups grabbed toward the end-of-round utility rating.
+      this.powerupsCollected += 1;
       this.activatePowerUp(grabbed);
     }
     this.tickPowerTimers(dt);
@@ -685,6 +691,15 @@ export class Game {
       this.haulEl.textContent = `${rating} · ${orbsSummary(this.orbsCollected)}`;
       this.haulEl.style.color = HAUL_COLOR[rating];
     }
+    // Rate the run's utility from the power-ups it grabbed, giving power-up
+    // usage its own read separate from score ("Overclocked · 5 power-ups
+    // grabbed"). Tinted by tier, gold for a power-up-heavy round down to grey
+    // for a round that grabbed none.
+    if (this.utilityEl) {
+      const rating = utilityFor(this.powerupsCollected);
+      this.utilityEl.textContent = `${rating} · ${powerupsSummary(this.powerupsCollected)}`;
+      this.utilityEl.style.color = UTILITY_COLOR[rating];
+    }
     this.newBestEl?.classList.toggle("hidden", !isNewBest);
     this.renderLeaderboard(rank);
     this.endScreenEl?.classList.remove("hidden");
@@ -736,6 +751,7 @@ export class Game {
     this.iFrames = 0;
     this.hitCount = 0;
     this.orbsCollected = 0;
+    this.powerupsCollected = 0;
     this.trauma = 0;
     this.speedTimer = 0;
     this.magnetTimer = 0;
