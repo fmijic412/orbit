@@ -2,6 +2,46 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-18 — End-of-round utility rating (#027)
+
+- Every dated issue (#001–#026) is done and every item in `docs/ROADMAP.md` was
+  already checked, so the plan is exhausted. Per the plan's "future runs add a
+  new idea, file it as the next issue, and build it" rule, today adds a new UI
+  idea — a utility rating on the end screen, derived from the number of power-ups
+  the player grabbed during the round — to the roadmap, files it as issue #027,
+  and builds it. It's the fifth end-screen read-out, alongside grade (score),
+  defense (hazard hits), momentum (peak combo) and haul (orb count): all four
+  existing reads reward collecting orbs, but nothing reflects how well the player
+  worked the speed boosts and magnets that shape those hauls.
+- New `src/game/utility.ts`: the pure, `three`- and DOM-free layer following the
+  `grade.ts` / `defense.ts` / `momentum.ts` / `haul.ts` / `nextGrade.ts` /
+  `scoring.ts` / `bonus.ts` / `countdown.ts` / `leaderboard.ts` precedent.
+  Exports a `UtilityRating` type (`Overclocked` · `Charged` · `Sparked` ·
+  `Unpowered`), a `UtilityTier` interface, `UTILITY_TIERS` (best-first, worst
+  tier `minPowerups: 0`), a `UTILITY_COLOR` map,
+  `utilityFor(powerups, tiers = UTILITY_TIERS)` (clamps the count at 0 and floors
+  it, returns the first tier whose `minPowerups` the count reaches — the
+  `minPowerups: 0` catch-all guarantees a valid result), and
+  `powerupsSummary(powerups)` for the none/singular/plural wording.
+- New `src/game/utility.test.ts`: 9 vitest cases over the top rating, the tier
+  step-downs and boundaries, a no-power-up round, negative and fractional counts,
+  custom tiers, and the `powerupsSummary` none/singular/plural/clamp/floor
+  wording.
+- Updated `src/game/Game.ts`: imports `utilityFor` / `powerupsSummary` /
+  `UTILITY_COLOR`, adds a `powerupsCollected` round field (seeded at 0, bumped by
+  1 in the existing `if (grabbed)` block of `update()`, reset to 0 in `restart()`
+  alongside `hitCount` / `orbsCollected`), caches the `#utility` element, and in
+  `endRound()`, after the haul line, writes `"<rating> · <powerupsSummary>"`
+  (tinted by tier) into `#utility`.
+- Updated `index.html` / `src/style.css`: a small `#utility` line on the end
+  panel, directly under `#haul` and above the final score; `#haul`'s bottom
+  margin tightened to 6px so the ratings group and `#utility` keeps the 14px gap
+  before the score.
+- No change to scoring, the combo math, collision, the power-up spawn/effect
+  logic, the grade thresholds, the difficulty ramp, the flawless bonus, or the
+  defense/momentum/haul ratings — the utility rating is a pure read of a count
+  the round already produces.
+
 ## 2026-07-17 — End-of-round haul rating (#026)
 
 - Every dated issue (#001–#025) is done and every item in `docs/ROADMAP.md` was
