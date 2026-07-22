@@ -2,6 +2,126 @@
 
 A dated record of what changed each day. Newest entries on top.
 
+## 2026-07-21 — Low-time warning: pulsing timer + tick sound (#030)
+
+- Every dated issue (#001–#029) is done and every item in `docs/ROADMAP.md`
+  was already checked, so the plan is exhausted. Per the plan's "future runs
+  add a new idea, file it as the next issue, and build it" rule, today adds
+  a new polish idea — the HUD timer is the one core stat (alongside score,
+  best, level) with no feedback attached to it, unlike the combo bar,
+  power-up timers or hazard hits, which all already have some visual or
+  audio cue. This gives the round's final 10 seconds a clear, unmissable
+  signal: the `#time` HUD element pulses red and a soft tick plays once per
+  second (10 ticks: 10, 9, 8, ... 1), so a player glancing away can't miss
+  that time is nearly up.
+- New `src/game/lowTime.ts`: the pure, `three`- and DOM-free layer following
+  the `countdown.ts` / `scoring.ts` / `bonus.ts` precedent. Exports
+  `LOW_TIME_SECONDS` (10), `isLowTime(timeLeft)` (true for
+  `0 < timeLeft <= LOW_TIME_SECONDS`), and `shouldTick(prevTimeLeft,
+  timeLeft)` (true when inside the window and `Math.ceil` of the two values
+  differ — the same rounding the HUD label already uses, so the tick lines
+  up exactly with the displayed number changing, and never fires on the
+  crossing into 0).
+- New `src/game/lowTime.test.ts`: 10 vitest cases over the `isLowTime`
+  boundary (above/at/below the threshold, exactly 0, negative) and
+  `shouldTick` (first window crossing, subsequent per-second crossings, no
+  fire mid-second, no fire outside the window, no fire at/into 0).
+- Updated `src/game/Audio.ts`: new `tick()` — a short 880Hz sine blip with a
+  fast exponential decay (~100ms), distinct from the existing `pickup()` /
+  `hit()` / `powerup()` cues so it reads as a plain clock tick rather than a
+  scoring or hazard event.
+- Updated `src/game/Game.ts`: imports `isLowTime` / `shouldTick`. In
+  `update()`'s playing branch, captures `prevTimeLeft` before decrementing
+  `this.timeLeft` and calls `this.audio.tick()` when `shouldTick` fires. In
+  `updateHud()`, toggles a `low-time` class on `#time` gated on
+  `this.state === "playing" && isLowTime(this.timeLeft)` — checking `state`
+  as well as the raw time value keeps the pulse from lingering into the
+  menu, pause or end screen if `timeLeft` itself was still inside the
+  window when the round stopped.
+- Updated `src/style.css`: new `#time.low-time` rule (red `#ff5c5c`) plus a
+  `low-time-pulse` keyframe (scale + opacity, 1s loop) directly after the
+  existing `#time` rule. No `index.html` change — the pulse is a class
+  toggle on the element that's already there.
+- No change to scoring, collision, the difficulty ramp, the combo math, the
+  power-up timers, or any of the grade/defense/momentum/haul/utility/
+  efficiency end-of-round ratings.
+- Bumped `package.json` to `0.1.30`.
+
+## 2026-07-20 — Enter/Space shortcut for menu, end and pause screens (#029)
+
+- Every dated issue (#001–#028) is done and every item in `docs/ROADMAP.md`
+  was already checked, so the plan is exhausted. Per the plan's "future runs
+  add a new idea, file it as the next issue, and build it" rule, today adds a
+  new UI idea — instead of a seventh end-screen rating (the last six days each
+  added one), a keyboard shortcut for the one primary button each of the
+  menu, end and pause overlays already has. `M` mutes and `Esc`
+  pauses/resumes from the keyboard, but starting a round, playing again or
+  resuming still required a mouse click; this closes that gap with no new
+  round state and no new pure-math module.
+- Updated `src/game/Game.ts`: `onKeyDown` gains an `Enter`/`Space` branch
+  calling a new `handlePrimaryAction(e)`, which checks which overlay is
+  actually visible — a new `isVisible(el)` helper reading the `.hidden` class,
+  not `this.state` — in order end screen → pause screen → menu screen, and
+  calls `restart()`, `resume()` or `restart()` respectively.
+  `e.preventDefault()` only runs when an action fires, so Space can't also
+  activate a focused button and double-trigger it. Visibility (not `state`)
+  is what's checked because `state` stays `"menu"` while the settings panel
+  is open over the menu — a `state`-only check would wrongly restart the game
+  while the player is dragging a volume slider.
+- Updated `index.html`: `#menu-controls` now mentions "Enter to start",
+  `#pause-hint` reads "Press Esc or Enter to resume", and a new `#end-hint`
+  paragraph under `#end-buttons` reads "Press Enter or Space to play again".
+- Updated `src/style.css`: new `#end-hint` rule matching the existing
+  `#pause-hint` / `#menu-controls` small, low-opacity hint-text treatment.
+- No change to scoring, collision, the difficulty ramp, audio, or any of the
+  grade/defense/momentum/haul/utility/efficiency end-of-round ratings.
+- Bumped `package.json` to `0.1.29`.
+
+## 2026-07-19 — End-of-round efficiency rating (#028)
+
+- Every dated issue (#001–#027) is done and every item in `docs/ROADMAP.md` was
+  already checked, so the plan is exhausted. Per the plan's "future runs add a
+  new idea, file it as the next issue, and build it" rule, today adds a new UI
+  idea — an efficiency rating on the end screen, derived from the run's final
+  score divided by the orbs it collected (points per orb) — to the roadmap,
+  files it as issue #028, and builds it. It's the sixth end-screen read-out,
+  alongside grade (score), defense (hazard hits), momentum (peak combo), haul
+  (orb count) and utility (power-ups): score hides the difference between a big
+  haul swept up at x1 and a small haul chained at x8 (same score), and momentum
+  reports only the single highest multiplier — nothing yet reads how well the
+  player *sustained* conversion across the whole round.
+- New `src/game/efficiency.ts`: the pure, `three`- and DOM-free layer following
+  the `grade.ts` / `defense.ts` / `momentum.ts` / `haul.ts` / `utility.ts` /
+  `nextGrade.ts` / `scoring.ts` / `bonus.ts` / `countdown.ts` / `leaderboard.ts`
+  precedent. Exports an `EfficiencyRating` type (`Masterful` · `Efficient` ·
+  `Scrappy` · `Wasteful`), an `EfficiencyTier` interface, `EFFICIENCY_TIERS`
+  (best-first, worst tier `minPerOrb: 0`), an `EFFICIENCY_COLOR` map,
+  `pointsPerOrb(score, orbs)` (returns `score / orbs`; 0 when orbs is 0 so there
+  is no divide by zero, negative score clamped to 0, orb count floored/clamped),
+  `efficiencyFor(perOrb, tiers = EFFICIENCY_TIERS)` (returns the first tier whose
+  `minPerOrb` the clamped ratio reaches — the `minPerOrb: 0` catch-all
+  guarantees a valid result), and `efficiencySummary(score, orbs)` for the
+  none / "N.N pts per orb" wording.
+- New `src/game/efficiency.test.ts`: 13 vitest cases over the ratio (including
+  the 0-orb divide-by-zero guard, negative score clamp, fractional/negative orb
+  counts), the tier boundaries and step-downs, the negative-ratio clamp, custom
+  tiers, a raw-score→ratio→rating round-trip, and the summary none / one-decimal
+  / negative-score wording.
+- Updated `src/game/Game.ts`: imports `efficiencyFor` / `efficiencySummary` /
+  `pointsPerOrb` / `EFFICIENCY_COLOR`, caches the `#efficiency` element, and in
+  `endRound()`, after the utility line, writes `"<rating> · <summary>"` (tinted
+  by tier) into `#efficiency`. No new round field — it reads the existing
+  `score` and `orbsCollected`. Placed after the flawless bonus is applied, so
+  the ratio reflects the run's final score.
+- Updated `index.html` / `src/style.css`: a small `#efficiency` line on the end
+  panel, directly under `#utility` and above the final score; `#utility`'s
+  bottom margin tightened to 6px so the ratings group stays tight and
+  `#efficiency` keeps the 14px gap before the score.
+- No change to scoring, the combo math, collision, the power-up spawn/effect
+  logic, the grade thresholds, the difficulty ramp, the flawless bonus, or the
+  defense/momentum/haul/utility ratings — the efficiency rating is a pure read
+  of two numbers the round already produces.
+
 ## 2026-07-18 — End-of-round utility rating (#027)
 
 - Every dated issue (#001–#026) is done and every item in `docs/ROADMAP.md` was

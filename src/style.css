@@ -55,6 +55,25 @@ body {
   letter-spacing: 0.5px;
 }
 
+/* Final LOW_TIME_SECONDS of a live round: a red pulse builds urgency,
+   paired with Audio.tick() firing on the same per-second crossing. */
+#time.low-time {
+  color: #ff5c5c;
+  animation: low-time-pulse 1s ease-in-out infinite;
+}
+
+@keyframes low-time-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.7;
+  }
+}
+
 #level {
   font-size: 20px;
   font-weight: 700;
@@ -410,6 +429,13 @@ body {
   justify-content: center;
 }
 
+#end-hint {
+  font-size: 13px;
+  opacity: 0.55;
+  margin-top: 14px;
+  margin-bottom: 0;
+}
+
 #to-menu {
   font: inherit;
   font-size: 16px;
@@ -552,6 +578,15 @@ body {
 }
 
 #utility {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.9;
+  margin: 0 0 6px;
+}
+
+#efficiency {
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.5px;

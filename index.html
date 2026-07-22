@@ -32,7 +32,7 @@
           <button id="start-game" type="button">Start</button>
           <button id="settings-game" type="button">Settings</button>
         </div>
-        <p id="menu-controls">WASD / Arrows on desktop &middot; drag the joystick on touch &middot; M to mute &middot; Esc to pause</p>
+        <p id="menu-controls">WASD / Arrows on desktop &middot; drag the joystick on touch &middot; M to mute &middot; Esc to pause &middot; Enter to start</p>
       </div>
     </div>
     <div id="settings-screen" class="hidden">
@@ -56,7 +56,7 @@
     <div id="pause-screen" class="hidden">
       <div id="pause-panel">
         <h1>Paused</h1>
-        <p id="pause-hint">Press Esc to resume</p>
+        <p id="pause-hint">Press Esc or Enter to resume</p>
         <button id="resume" type="button">Resume</button>
       </div>
     </div>
@@ -72,6 +72,7 @@
         <p id="momentum" aria-label="Momentum rating">Cold &middot; no combo chained</p>
         <p id="haul" aria-label="Haul rating">Sparse &middot; no orbs collected</p>
         <p id="utility" aria-label="Utility rating">Unpowered &middot; no power-ups grabbed</p>
+        <p id="efficiency" aria-label="Efficiency rating">Wasteful &middot; no orbs collected</p>
         <p id="final-score">Final score: 0</p>
         <p id="new-best" class="hidden">New best!</p>
         <p id="flawless-bonus" class="hidden">Flawless round! +25</p>
@@ -84,6 +85,7 @@
           <button id="play-again" type="button">Play again</button>
           <button id="to-menu" type="button">Main menu</button>
         </div>
+        <p id="end-hint">Press Enter or Space to play again</p>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

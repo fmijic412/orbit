@@ -26,6 +26,8 @@ bottom; they get scheduled into a future sprint.
 - [x] Screen shake on hazard contact
 - [x] Animated skybox / gradient background
 - [x] Round-start "3 · 2 · 1 · Go!" countdown
+- [x] Low-time warning: pulsing red timer + a per-second tick sound in the
+      final 10 seconds of a live round
 
 ## UI
 
@@ -40,6 +42,9 @@ bottom; they get scheduled into a future sprint.
 - [x] End-of-round momentum rating from the peak combo multiplier reached
 - [x] End-of-round haul rating from the total orbs collected
 - [x] End-of-round utility rating from the power-ups collected
+- [x] End-of-round efficiency rating from the score earned per orb collected
+- [x] Enter/Space shortcut for the menu Start, end-screen Play again and
+      pause Resume buttons
 
 ## Tech
 
