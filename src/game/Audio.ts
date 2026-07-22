@@ -181,6 +181,30 @@ export class Audio {
   }
 
   /**
+   * Plays a short, soft "tick" for each second remaining once the round enters
+   * its final countdown (see `lowTime.ts`). A plain sine blip that builds
+   * urgency without being as harsh as the hazard `hit()` buzz or as bright as
+   * the `pickup()`/`powerup()` cues, so it reads as a clock, not an event.
+   */
+  tick(): void {
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, now);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.3, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+
+    osc.connect(gain);
+    gain.connect(this.master);
+    osc.start(now);
+    osc.stop(now + 0.1);
+  }
+
+  /**
    * Starts the looped ambience pad: two slightly detuned oscillators through a
    * lowpass filter, with a slow LFO breathing the gain. Idempotent — a second
    * call while already running is a no-op.

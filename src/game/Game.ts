@@ -13,6 +13,7 @@ import { Settings } from "./Settings";
 import { HighScores } from "./HighScores";
 import { formatEntryDate } from "./leaderboard";
 import { COUNTDOWN_SECONDS, countdownLabel, tickCountdown } from "./countdown";
+import { isLowTime, shouldTick } from "./lowTime";
 import { flawlessBonus } from "./bonus";
 import { GRADE_COLOR, gradeFor } from "./grade";
 import { nextGradeProgress } from "./nextGrade";
@@ -20,6 +21,12 @@ import { DEFENSE_COLOR, defenseFor, hitsSummary } from "./defense";
 import { MOMENTUM_COLOR, momentumFor, peakSummary } from "./momentum";
 import { HAUL_COLOR, haulFor, orbsSummary } from "./haul";
 import { UTILITY_COLOR, utilityFor, powerupsSummary } from "./utility";
+import {
+  EFFICIENCY_COLOR,
+  efficiencyFor,
+  efficiencySummary,
+  pointsPerOrb,
+} from "./efficiency";
 import {
   COMBO_WINDOW,
   applyHazardPenalty,
@@ -160,6 +167,7 @@ export class Game {
   private readonly momentumEl = document.getElementById("momentum");
   private readonly haulEl = document.getElementById("haul");
   private readonly utilityEl = document.getElementById("utility");
+  private readonly efficiencyEl = document.getElementById("efficiency");
   private readonly leaderboardListEl = document.getElementById(
     "leaderboard-list",
   );
@@ -227,7 +235,10 @@ export class Game {
     window.addEventListener("resize", this.onResize);
   }
 
-  /** First-gesture audio bootstrap, the "M" mute toggle and Esc pause. */
+  /**
+   * First-gesture audio bootstrap, the "M" mute toggle, Esc pause and the
+   * Enter/Space shortcut for whichever overlay button is primary right now.
+   */
   private onKeyDown = (e: KeyboardEvent): void => {
     this.ensureAudioStarted();
     if (e.code === "KeyM") {
@@ -235,8 +246,37 @@ export class Game {
       this.updateAudioHud();
     } else if (e.code === "Escape") {
       this.togglePause();
+    } else if (e.code === "Enter" || e.code === "Space") {
+      this.handlePrimaryAction(e);
     }
   };
+
+  /**
+   * Enter/Space triggers whichever overlay's primary button is currently on
+   * screen, so the menu Start, end-screen Play again and pause Resume buttons
+   * are all reachable without a mouse. Checked against the actual visible
+   * overlay (not `state` alone) so the shortcut stays inert while the
+   * settings panel covers the menu, and does nothing mid-round or during the
+   * pre-round countdown. `preventDefault` stops Space from also activating a
+   * focused button, which would otherwise fire the same action twice.
+   */
+  private handlePrimaryAction(e: KeyboardEvent): void {
+    if (this.isVisible(this.endScreenEl)) {
+      e.preventDefault();
+      this.restart();
+    } else if (this.isVisible(this.pauseScreenEl)) {
+      e.preventDefault();
+      this.resume();
+    } else if (this.isVisible(this.menuScreenEl)) {
+      e.preventDefault();
+      this.restart();
+    }
+  }
+
+  /** True when `el` exists and isn't hidden via the `.hidden` class. */
+  private isVisible(el: HTMLElement | null): boolean {
+    return el !== null && !el.classList.contains("hidden");
+  }
 
   /** Esc toggles pause, but only mid-round (never on the end screen). */
   private togglePause(): void {
@@ -389,7 +429,14 @@ export class Game {
       return;
     }
 
+    const prevTimeLeft = this.timeLeft;
     this.timeLeft = Math.max(0, this.timeLeft - dt);
+    // Ticks once per displayed second inside the final LOW_TIME_SECONDS, in
+    // sync with the same Math.ceil the HUD label uses, so the sound lines up
+    // with the number the player sees change.
+    if (shouldTick(prevTimeLeft, this.timeLeft)) {
+      this.audio.tick();
+    }
     this.tickComboWindow(dt);
     this.updateLevel();
 
@@ -564,6 +611,13 @@ export class Game {
     if (this.bestEl) this.bestEl.textContent = `Best: ${this.bestScore}`;
     if (this.timeEl) {
       this.timeEl.textContent = `Time: ${Math.ceil(this.timeLeft)}`;
+      // Pulses red only while actually playing the round's final seconds —
+      // not on the end screen, where the timer is frozen at whatever value
+      // it last held (which could itself be inside the low-time window).
+      this.timeEl.classList.toggle(
+        "low-time",
+        this.state === "playing" && isLowTime(this.timeLeft),
+      );
     }
     if (this.levelEl) this.levelEl.textContent = `Level: ${this.level}`;
     this.updateComboHud();
@@ -699,6 +753,16 @@ export class Game {
       const rating = utilityFor(this.powerupsCollected);
       this.utilityEl.textContent = `${rating} · ${powerupsSummary(this.powerupsCollected)}`;
       this.utilityEl.style.color = UTILITY_COLOR[rating];
+    }
+    // Rate how well the run converted collection into points — its final score
+    // per orb — giving sustained multiplier/orb-tier play its own read separate
+    // from the raw haul or the single peak combo ("Masterful · 11.2 pts per
+    // orb"). Tinted by tier, gold for a high-conversion round down to grey for a
+    // round that scored little per pickup (or collected nothing).
+    if (this.efficiencyEl) {
+      const rating = efficiencyFor(pointsPerOrb(this.score, this.orbsCollected));
+      this.efficiencyEl.textContent = `${rating} · ${efficiencySummary(this.score, this.orbsCollected)}`;
+      this.efficiencyEl.style.color = EFFICIENCY_COLOR[rating];
     }
     this.newBestEl?.classList.toggle("hidden", !isNewBest);
     this.renderLeaderboard(rank);
